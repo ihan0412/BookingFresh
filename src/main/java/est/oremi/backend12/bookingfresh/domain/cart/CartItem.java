@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.cart;
 
-import com.est.bf.domain.product.Product;
+
+import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

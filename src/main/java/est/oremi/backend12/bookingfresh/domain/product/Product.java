@@ -1,12 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.product;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,4 +20,9 @@ public class Product {
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Photo> photos = new ArrayList<>();
+
+  // 카테고리 연관관계
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "categorie_idx", nullable = false)
+  private Category category;
 }
