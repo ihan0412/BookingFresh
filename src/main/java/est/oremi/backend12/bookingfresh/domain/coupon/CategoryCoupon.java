@@ -3,17 +3,10 @@ package est.oremi.backend12.bookingfresh.domain.coupon;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "usercoupons")
-public class UserCoupon {
+@Table(name = "category_coupons")
+public class CategoryCoupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "is_used")
-    private Boolean isUsed;
-
-    @Column(name = "is_applied")
-    private Boolean isApplied;
-
 
 }
