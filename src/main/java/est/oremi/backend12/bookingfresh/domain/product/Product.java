@@ -11,12 +11,13 @@ import java.util.List;
 public class Product {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
+
+  private Long id;
   private String name;
   private BigDecimal price;
   private int stock;
-  private Long weight;
+  private String weigt_pieces;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Photo> photos = new ArrayList<>();
