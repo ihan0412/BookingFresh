@@ -5,12 +5,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ai_messages")
+@Table(name = "ai_recommendations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Message {
+public class AiRecommendation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +20,12 @@ public class Message {
     @JoinColumn(name = "session_idx", nullable = false)
     private Session session;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String prompt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "msg_idx", nullable = false)
+    private Message message;
 
-    @Column(columnDefinition = "TEXT")
-    private String response;
+    @Column(name = "product_idx", nullable = false)
+    private Long productIdx;
 
     private LocalDateTime createdAt;
 }
