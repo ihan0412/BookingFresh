@@ -1,0 +1,23 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: optional:file:.env.dev[.properties]
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    est.oremi.backend12: debug
