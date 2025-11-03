@@ -62,7 +62,7 @@ dependencies {
     // AI
     // ===================================
     implementation 'org.springframework.boot:spring-boot-starter-webflux'  // Alan API 통신
-    implementation 'com.openai:openai-java:1.15.0'                          // OpenAI SDK
+    implementation 'com.openai:openai-java:4.6.1'                          // OpenAI SDK
     implementation 'com.fasterxml.jackson.core:jackson-databind'            // JSON 파싱
     implementation 'com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations'
 
