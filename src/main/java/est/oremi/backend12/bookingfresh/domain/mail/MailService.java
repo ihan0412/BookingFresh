@@ -53,8 +53,8 @@ public class MailService {
                 감사합니다.
                 """,
                 consumer.getNickname(),
-                order.getId(),
-                order.getDeliveryDateTime()
+                order.getDeliveryDateTime(),
+                order.getId()
         );
 
         // MailType.DELIVERY_REMINDER 로 발송
