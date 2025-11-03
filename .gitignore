@@ -38,3 +38,5 @@ out/
 
 .env.dev
 .env.prod
+.env.local
+src/main/resources/application-local.yml
