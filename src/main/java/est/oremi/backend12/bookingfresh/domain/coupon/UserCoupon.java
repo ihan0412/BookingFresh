@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.coupon;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
 
 @Entity

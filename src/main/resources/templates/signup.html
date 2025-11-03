@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <style>
+        /* 기본적인 스타일은 생략 */
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .error { color: red; font-size: 0.9em; }
+        label { display: block; margin-top: 10px; }
+        input[type="text"], input[type="password"] { width: 300px; padding: 5px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+<h1>회원가입</h1>
+
+<form id="signupForm" th:object="${consumerRequest}">
+
+    <label for="email">이메일:</label>
+    <input type="text" id="email" name="email" th:field="*{email}">
+    <span class="error" id="emailError"></span>
+
+    <label for="password">비밀번호:</label>
+    <input type="password" id="password" name="password" th:field="*{password}">
+    <span class="error" id="passwordError"></span>
+
+    <label for="passwordConfirm">비밀번호 확인:</label>
+    <input type="password" id="passwordConfirm" name="passwordConfirm" th-field="*{passwordConfirm}">
+    <span class="error" id="passwordConfirmError"></span>
+
+    <label for="nickname">닉네임:</label>
+    <input type="text" id="nickname" name="nickname" th-field="*{nickname}">
+    <span class="error" id="nicknameError"></span>
+
+    <label for="address">주소:</label>
+    <input type="text" id="address" name="address" th-field="*{address}">
+    <span class="error" id="addressError"></span>
+
+    <label for="detailAddress">세부 주소:</label>
+    <input type="text" id="detailAddress" name="detailAddress" th-field="*{detailAddress}">
+    <span class="error" id="detailAddressError"></span>
+
+    <button type="submit">가입하기</button>
+</form>
+
+<div id="message" style="margin-top: 20px; color: blue;"></div>
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 폼 데이터를 JSON 객체로 변환
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        // 모든 에러 메시지 초기화
+        document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+        fetch('/api/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => {
+                // 응답 본문을 JSON으로 파싱 시도
+                return response.json().then(json => {
+                    return {
+                        status: response.status,
+                        body: json
+                    };
+                }).catch(() => {
+                    // JSON 파싱 실패 시 (예: 응답이 빈 경우)
+                    return {
+                        status: response.status,
+                        body: null
+                    };
+                });
+            })
+            .then(({ status, body }) => {
+                const messageDiv = document.getElementById('message');
+
+                if (status === 201) {
+                    messageDiv.textContent = '회원가입 성공! (ID: ' + body.id + ')';
+                    messageDiv.style.color = 'green';
+                } else if (status === 400) {
+                    // DTO 유효성 검사 실패 또는 Service 비즈니스 로직 오류 처리
+                    const errorMsg = body && body.message ? body.message : '유효성 검사에 실패했습니다.';
+                    messageDiv.textContent = '가입 실패: ' + errorMsg;
+                    messageDiv.style.color = 'red';
+                } else {
+                    messageDiv.textContent = '알 수 없는 오류가 발생했습니다.';
+                    messageDiv.style.color = 'red';
+                }
+            })
+            .catch(error => {
+                document.getElementById('message').textContent = '네트워크 오류가 발생했습니다.';
+                document.getElementById('message').style.color = 'red';
+            });
+    });
+</script>
+</body>
+</html>
