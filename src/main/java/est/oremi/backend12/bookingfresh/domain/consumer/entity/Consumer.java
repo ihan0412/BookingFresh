@@ -1,14 +1,17 @@
-package est.oremi.backend12.bookingfresh.domain.consumer;
+package est.oremi.backend12.bookingfresh.domain.consumer.entity;
 
 import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 @Entity
 @Table(name="consumers")
 public class Consumer {
@@ -16,7 +19,7 @@ public class Consumer {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "email")
+  @Column(name = "email", nullable = false, unique = true)
   private String email;
 
   @Column(name = "password")
@@ -42,5 +45,15 @@ public class Consumer {
 
   @OneToMany(mappedBy = "consumer")
   private List<UserCoupon> userCoupons = new ArrayList<>();
+
+  @Builder
+  public Consumer(String email, String password, String nickname, String address, String detailAddress, LocalDateTime createdAt) {
+    this.email = email;
+    this.password = password;
+    this.nickname = nickname;
+    this.address = address;
+    this.detailAddress = detailAddress;
+    this.createdAt = createdAt;
+  }
 
 }
