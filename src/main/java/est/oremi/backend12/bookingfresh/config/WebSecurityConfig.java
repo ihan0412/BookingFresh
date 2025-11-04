@@ -28,8 +28,11 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity // -> http 랑 다른게 뭘까
-                .csrf(auth -> auth.disable())  // csrf 비활성화 -> JWT 환경에선 불필요?
-                .httpBasic(AbstractHttpConfigurer::disable) // http basic 인증 비활성화 -> ?
+                .csrf(auth -> auth.disable())
+                // csrf 비활성화 -> JWT 환경에선 불필요? -> 세션을 사용하지 않기 때문에
+                .httpBasic(AbstractHttpConfigurer::disable)
+                // http basic 인증 비활성화 -> 사용자면  비밀번호를 텍스트로 전송하는 기본적인 인증 방식,
+                // 보안에 취약하므로 JWT 롸 같이 암호화된 토큰 기반의 인증 방식을 사용할 때는 비활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 ) // -> JWT 를 사용하기 때문에 세션을 생성하거나 사용하지 않도록 설정(stateless)
