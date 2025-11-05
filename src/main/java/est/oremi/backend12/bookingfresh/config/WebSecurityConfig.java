@@ -1,29 +1,25 @@
 package est.oremi.backend12.bookingfresh.config;
 
+import est.oremi.backend12.bookingfresh.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-/*
-    @Bean
-    public WebSecurityCustomizer configure() {
-        return web -> web.ignoring() // 정적 리소스 접근 허용
-                .requestMatchers("/static/**", "/css/**", "/js/**");
-    }
-
-*/
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -43,13 +39,16 @@ public class WebSecurityConfig {
                                         "/login",
                                         "/home",
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
-                                        //"/api/auth/refresh",        // 토큰 재발급 처리
+                                        "/api/auth/refresh",        // 토큰 재발급 처리
+                                        "/api/auth/logout",
                                         "/api/login"     // POST /api/login (로그인 처리)
                                 ).permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
-                                .anyRequest().authenticated());
+                                .anyRequest().authenticated()
 
-        // todo: JWT 로직 구현
+                )
+                // 토큰 필터 먼저 적용
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);;
 
         return httpSecurity.build();
     }
@@ -57,6 +56,11 @@ public class WebSecurityConfig {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    // 비밀번호 검증
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
 }

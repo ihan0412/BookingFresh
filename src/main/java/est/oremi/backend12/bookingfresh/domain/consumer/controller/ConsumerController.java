@@ -1,24 +1,25 @@
 package est.oremi.backend12.bookingfresh.domain.consumer.controller;
 
+import est.oremi.backend12.bookingfresh.config.jwt.JwtTokenProvider;
 import est.oremi.backend12.bookingfresh.domain.consumer.Service.ConsumerService;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.AddConsumerRequest;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.ConsumerResponse;
+import est.oremi.backend12.bookingfresh.domain.consumer.dto.*;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.token.TokenService;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ConsumerController {
     private final ConsumerService consumerService;
-
+    private final JwtTokenProvider jwtTokenProvider;
     @PostMapping("/signup")
     public ResponseEntity<ConsumerResponse> signup(@Valid @RequestBody AddConsumerRequest request,
                                                    BindingResult bindingResult) {
@@ -47,5 +48,85 @@ public class ConsumerController {
 
     }
 
-    // todo: 로그인
+
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            BindingResult bindingResult,
+            HttpServletResponse response) { // Refresh Token을 HttpOnly Cookie로 설정하기위한 HttpServletResponse
+
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        try {
+            TokenResponse tokenResponse = consumerService.login(request);
+
+            // Refresh Token을 HttpOnly 쿠키로 변환하여 응답 헤더에 추가
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(true) // HTTP 환경 테스트를 위해 false (운영 시 true)
+                    .path("/") // 모든 경로에서 쿠키 전송
+                    .maxAge(jwtTokenProvider.getRefreshTokenExpirationSeconds()) // RT 만료 시간
+                    .build();
+
+            response.addHeader("Set-Cookie", cookie.toString());
+
+            // 응답 Body에는 Access Token만 포함하여 반환
+            return ResponseEntity.ok(
+                    TokenResponse.builder()
+                            .accessToken(tokenResponse.getAccessToken())
+                            // Refresh Token은 Body에서 제거하거나 null 처리
+                            // Body에 RT가 남아 있으면 프론트가 오용할 수 있으므로 제거하는 것이 좋음
+                            .build()
+            );
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    //토큰 재발급 API: Refresh Token을 이용해 Access Token과 Refresh Token 재발급
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody RefreshRequest request,
+                                                      BindingResult bindingResult) {
+
+        // 유효성 검사
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        try {
+            // Service 로직 호출, 성공시 새 토큰 반환
+            TokenResponse tokenResponse = consumerService.refreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(tokenResponse);
+        } catch (IllegalArgumentException e) {
+            // Refresh Token 무효/만료 등 실패 시 (401 Unauthorized)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // 로그아웃 API: Refresh Token DB 삭제 및 쿠키 무효화
+    @PostMapping("/auth/logout")
+    public ResponseEntity<String> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+
+        // Todo: DB Refresh Token 삭제 로직 (ConsumerService에 구현 필요)
+        consumerService.logout(refreshToken);
+
+        // 브라우저의 Refresh Token 쿠키를 만료시켜 삭제
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false) // 운영 시 true
+                .path("/api/auth")
+                .maxAge(0) // 만료 시간을 0으로 설정하여 즉시 삭제
+                .sameSite("Strict")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .body("로그아웃 성공");
+    }
 }
