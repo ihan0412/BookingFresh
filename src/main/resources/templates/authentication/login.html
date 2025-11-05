@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+</head>
+<body>
+<h1>로그인</h1>
+
+<form id="loginForm" th:object="${loginRequest}">
+
+    <label for="email">이메일:</label>
+    <input type="text" id="email" name="email" th:field="*{email}">
+
+    <label for="password">비밀번호:</label>
+    <input type="password" id="password" name="password" th-field="*{password}">
+
+    <button type="submit">로그인</button>
+</form>
+
+<div id="message" style="margin-top: 20px; color: red;"></div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        fetch('/api/login', { // ⭐ 로그인 API 경로
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => {
+                const cookieHeader = response.headers.get('Set-Cookie');
+                if (cookieHeader) {
+                    // Refresh Token이 HttpOnly 쿠키에 저장됨
+                    console.log('Refresh Token Cookie Set:', cookieHeader);
+                }
+                return response.json();
+            })
+            .then(json => {
+                const messageDiv = document.getElementById('message');
+                if (json.accessToken) {
+                    // 1. Access Token을 Local Storage 또는 Session Storage에 저장
+                    localStorage.setItem('accessToken', json.accessToken);
+
+                    messageDiv.textContent = '로그인 성공! Access Token 저장됨.';
+                    messageDiv.style.color = 'green';
+
+                    // 2. 로그인 후 이동 (예: 홈 페이지)
+                    // window.location.href = '/home';
+                } else {
+                    messageDiv.textContent = json.message || '로그인 실패: 이메일 또는 비밀번호 불일치.';
+                    messageDiv.style.color = 'red';
+                }
+            })
+            .catch(error => {
+                document.getElementById('message').textContent = '네트워크 오류가 발생했습니다.';
+                document.getElementById('message').style.color = 'red';
+            });
+    });
+</script>
+</body>
+</html>
