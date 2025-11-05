@@ -6,6 +6,7 @@ import est.oremi.backend12.bookingfresh.domain.order.Order;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Getter
 @Entity
+@NoArgsConstructor
 @Table(name="consumers")
 public class Consumer {
   @Id
@@ -36,6 +38,10 @@ public class Consumer {
 
   @Column(name = "created_at")
   private LocalDateTime createdAt;
+
+  // ROLE 하드코딩
+  @Column(name = "ROLE")
+  private String role = "ROLE_USER";
 
   @OneToOne(mappedBy = "consumer", cascade = CascadeType.ALL, orphanRemoval = true)
   private Cart cart;
