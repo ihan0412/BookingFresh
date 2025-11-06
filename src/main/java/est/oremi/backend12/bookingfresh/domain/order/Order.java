@@ -2,12 +2,15 @@ package est.oremi.backend12.bookingfresh.domain.order;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
 @Table(name = "orders")
 public class Order {
     public enum OrderStatus {
