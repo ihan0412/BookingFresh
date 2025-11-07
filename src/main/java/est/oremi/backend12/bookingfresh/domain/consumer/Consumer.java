@@ -4,6 +4,8 @@ import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @Entity
 @Table(name="consumers")
+@Getter
 public class Consumer {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

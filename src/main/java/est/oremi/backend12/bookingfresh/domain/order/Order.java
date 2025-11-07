@@ -2,6 +2,8 @@ package est.oremi.backend12.bookingfresh.domain.order;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
 import jakarta.persistence.*;
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
+@Getter
 public class Order {
     public enum OrderStatus {
         PENDING,
