@@ -1,19 +1,21 @@
-package est.oremi.backend12.bookingfresh.domain.consumer;
+package est.oremi.backend12.bookingfresh.domain.consumer.entity;
 
 import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name="consumers")
 @Getter
+@Entity
+@NoArgsConstructor
+@Table(name="consumers")
 public class Consumer {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +39,10 @@ public class Consumer {
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
+  // ROLE 하드코딩
+  @Column(name = "ROLE")
+  private String role = "ROLE_USER";
+
   @OneToOne(mappedBy = "consumer", cascade = CascadeType.ALL, orphanRemoval = true)
   private Cart cart;
 
@@ -45,5 +51,15 @@ public class Consumer {
 
   @OneToMany(mappedBy = "consumer")
   private List<UserCoupon> userCoupons = new ArrayList<>();
+
+  @Builder
+  public Consumer(String email, String password, String nickname, String address, String detailAddress, LocalDateTime createdAt) {
+    this.email = email;
+    this.password = password;
+    this.nickname = nickname;
+    this.address = address;
+    this.detailAddress = detailAddress;
+    this.createdAt = createdAt;
+  }
 
 }

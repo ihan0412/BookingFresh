@@ -1,17 +1,16 @@
 package est.oremi.backend12.bookingfresh.domain.order;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
 @Table(name = "orders")
 @Getter
 public class Order {

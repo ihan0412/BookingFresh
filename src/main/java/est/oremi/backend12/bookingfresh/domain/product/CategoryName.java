@@ -4,5 +4,8 @@ public enum CategoryName {
     VEGETABLES,
     FROZEN_FOODS,
     DAIRY,
-    MEAT
+    MEAT,
+    SEAFOOD,
+    FRUIT,
+    BREAD
 }

@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.mail;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
