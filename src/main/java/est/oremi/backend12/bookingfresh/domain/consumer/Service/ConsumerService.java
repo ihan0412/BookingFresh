@@ -9,6 +9,7 @@ import est.oremi.backend12.bookingfresh.domain.consumer.dto.TokenResponse;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.RefreshToken;
 import est.oremi.backend12.bookingfresh.domain.consumer.repository.RefreshTokenRepository;
+import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +29,7 @@ import java.util.Optional;
 public class ConsumerService {
     private final ConsumerRepository consumerRepository;
     private final PasswordEncoder encoder;
+    private final CouponService couponService;
     @Transactional
     public ConsumerResponse signUp(AddConsumerRequest request) {
         // 비밀번호, 비밀번호 확인 일치 검사
@@ -54,7 +56,9 @@ public class ConsumerService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        consumerRepository.save(newConsumer);
+        Consumer savedConsumer = consumerRepository.save(newConsumer);
+        // 회원가입한 사용자에게 현재 존재하는 모든 쿠폰 발행
+        couponService.issueAllActiveCouponsToNewConsumer(savedConsumer);
         return new ConsumerResponse(newConsumer);
     }
 
