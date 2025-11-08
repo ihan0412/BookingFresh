@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.session.Service;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.session.Message;
 import est.oremi.backend12.bookingfresh.domain.session.Session;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
@@ -21,7 +21,7 @@ public class AISessionService {
         Session session = Session.builder()
                 .user(user)
                 .title("AI 대화") // 임시 기본값
-                .purpose(Session.SessionPurpose.UNDEFINED)
+//                .purpose(Session.SessionPurpose.UNDEFINED)
                 .status(Session.SessionStatus.ACTIVE)
                 .introMessage("안녕하세요 😊 요리 도우미입니다. 어떤 걸 도와드릴까요?")
                 .startedAt(LocalDateTime.now())

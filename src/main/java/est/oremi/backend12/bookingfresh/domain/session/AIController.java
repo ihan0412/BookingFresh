@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.session;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AIService;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AISessionService;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
@@ -25,7 +25,6 @@ public class AIController {
     public ResponseEntity<AiSessionResponse> startNewSession(
             @AuthenticationPrincipal Consumer user
     ) {
-        // 목적(title/purpose)은 아직 정하지 않고 생성
         Session session = aiSessionService.createSession(user);
 
         URI location = URI.create("/api/ai/sessions/" + session.getIdx());

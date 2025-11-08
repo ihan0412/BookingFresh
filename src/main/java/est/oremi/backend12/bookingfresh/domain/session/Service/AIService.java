@@ -2,7 +2,7 @@ package est.oremi.backend12.bookingfresh.domain.session.Service;
 
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.*;
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.session.AiResponseFormatter;
 import est.oremi.backend12.bookingfresh.domain.session.AlanApiClient;
 import est.oremi.backend12.bookingfresh.domain.session.Message;
