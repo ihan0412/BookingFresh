@@ -23,12 +23,6 @@ public class Message {
     @Enumerated(EnumType.STRING)
     private SenderType senderType;
 
-//    @Column(columnDefinition = "TEXT")
-//    private String prompt;
-//
-//    @Column(columnDefinition = "TEXT")
-//    private String response;
-
     @Column(columnDefinition = "TEXT")
     private String content;
 
@@ -39,8 +33,6 @@ public class Message {
     //사용자의 의도 분석 결과
     @Enumerated(EnumType.STRING)
     private IntentType intent;
-
-//    private String target;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)

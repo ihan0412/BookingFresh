@@ -1,8 +1,8 @@
 package est.oremi.backend12.bookingfresh.domain.session.Service;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.session.Message;
-import est.oremi.backend12.bookingfresh.domain.session.Session;
+import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
+import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;

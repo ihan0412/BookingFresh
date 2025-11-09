@@ -19,7 +19,7 @@ public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Idx;
+    private Long idx;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_idx", nullable = false)
@@ -53,10 +53,6 @@ public class Session {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AiRecommendation> recommendations = new ArrayList<>();
-
-//    public enum SessionPurpose {
-//        UNDEFINED, RECIPE_ASSISTANT, COOKING_IDEA, SHOPPING_ASSISTANT, GENERAL_CHAT
-//    }
 
     public enum SessionStatus {
         ACTIVE, ENDED

@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.session.dto;
 
-import est.oremi.backend12.bookingfresh.domain.session.Session;
+import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,7 +21,6 @@ public class AiSessionResponse {
         return AiSessionResponse.builder()
                 .id(session.getIdx())
                 .title(session.getTitle())
-                .purpose(session.getPurpose().name())
                 .status(session.getStatus().name())
                 .introMessage(session.getIntroMessage())
                 .startedAt(session.getStartedAt())

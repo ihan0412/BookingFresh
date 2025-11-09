@@ -11,6 +11,7 @@ import com.openai.models.chat.completions.StructuredChatCompletion;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiResponseData;
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.RecipeSchema;
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.SuggestionSchema;
+import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
