@@ -48,7 +48,7 @@ public class Session {
     private List<AiRecommendation> recommendations = new ArrayList<>();
 
     public enum SessionStatus {
-        ACTIVE, ENDED
+        ACTIVE, PAUSED, ENDED
     }
 
     @PrePersist

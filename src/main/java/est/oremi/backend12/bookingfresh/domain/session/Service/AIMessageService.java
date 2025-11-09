@@ -23,6 +23,7 @@ public class AIMessageService {
     private final MessageRepository messageRepository;
     private final AlanApiClient alanApiClient;     // 앨런 API 호출용
     private final OpenAiService openAiService;
+    private final AISessionService aiSessionService;
 
     @Value("${ai.alan.client-id}")
     private String alanClientId;
@@ -43,13 +44,16 @@ public class AIMessageService {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        // 2. 앨런 LLM API 호출
+        // 2. 첫 메시지라면 세션 타이틀 생성
+        aiSessionService.handlePostMessage(session, userMsg);
+
+        // 3. 앨런 LLM API 호출
         String aiRawText = alanApiClient.askAlan(req.getContent(), alanClientId);
 
-        // 3. 세션 목적 기반 구조화 (JSON)
+        // 4. 세션 목적 기반 구조화 (JSON)
         AiResponseData structured = openAiService.formatAlanResponse(intent, aiRawText);
 
-        // 4. AI 응답 메시지 저장
+        // 5. AI 응답 메시지 저장
         Message aiMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.AI)
@@ -59,10 +63,10 @@ public class AIMessageService {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        session.setLastMessageAt(LocalDateTime.now());
+        session.updateLastMessageAt(LocalDateTime.now());
         sessionRepository.save(session);
 
-        // 5. DTO 응답
+        // 6. DTO 응답
         return AiMessageResponse.builder()
                 .sessionId(session.getIdx())
                 .messageId(aiMsg.getIdx())

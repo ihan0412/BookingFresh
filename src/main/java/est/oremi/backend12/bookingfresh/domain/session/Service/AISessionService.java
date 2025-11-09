@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.session.Service;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
+import est.oremi.backend12.bookingfresh.domain.session.AlanApiClient;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
@@ -15,12 +16,13 @@ import java.time.LocalDateTime;
 public class AISessionService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
+    private final OpenAiService openAiService;
 
     // 세션 생성
     public Session createSession(Consumer user) {
         Session session = Session.builder()
                 .user(user)
-                .title("AI 대화") // 임시 기본값
+                .title("새 AI 대화") // 임시 기본값
                 .status(Session.SessionStatus.ACTIVE)
                 .startedAt(LocalDateTime.now())
                 .lastMessageAt(LocalDateTime.now())
@@ -39,6 +41,17 @@ public class AISessionService {
         messageRepository.save(systemMsg);
 
         return saved;
+    }
+
+    public void handlePostMessage(Session session, Message userMessage) {
+        // 세션의 첫 메시지일 경우에만
+        if (session.getMessages().size() == 1 || session.getTitle() == null) {
+            String title = openAiService.generateTitleFromMessage(userMessage.getContent());
+            session.setTitle(title);
+            sessionRepository.save(session);
+        }
+
+        session.updateLastMessageAt(LocalDateTime.now());
     }
 
 }
