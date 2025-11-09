@@ -12,7 +12,6 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "orders")
-@Getter
 public class Order {
     public enum OrderStatus {
         PENDING,

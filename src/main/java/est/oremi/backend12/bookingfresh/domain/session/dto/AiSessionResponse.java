@@ -21,7 +21,6 @@ public class AiSessionResponse {
         return AiSessionResponse.builder()
                 .id(session.getIdx())
                 .title(session.getTitle())
-                .purpose(session.getPurpose().name())
                 .status(session.getStatus().name())
                 .introMessage(session.getIntroMessage())
                 .startedAt(session.getStartedAt())

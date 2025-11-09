@@ -5,7 +5,6 @@ import est.oremi.backend12.bookingfresh.domain.session.Service.AIService;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AISessionService;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageResponse;
-import est.oremi.backend12.bookingfresh.domain.session.dto.AiSessionPurposeRequest;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiSessionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
