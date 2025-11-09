@@ -2,6 +2,7 @@ package est.oremi.backend12.bookingfresh.domain.session.Service;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.session.AlanApiClient;
+import est.oremi.backend12.bookingfresh.domain.session.dto.AiSessionResponse;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,4 +56,18 @@ public class AISessionService {
         session.updateLastMessageAt(LocalDateTime.now());
     }
 
+    // 세션 목록 조회
+    public List<AiSessionResponse> getUserSessions(Consumer user) {
+        return sessionRepository.findByUserOrderByLastMessageAtDesc(user)
+                .stream()
+                .map(AiSessionResponse::from)
+                .toList();
+    }
+
+    // 단일 세션 조회
+    public AiSessionResponse getSessionDetail(Long sessionId, Consumer user) {
+        Session session = sessionRepository.findByIdxAndUser(sessionId, user)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+        return AiSessionResponse.from(session);
+    }
 }

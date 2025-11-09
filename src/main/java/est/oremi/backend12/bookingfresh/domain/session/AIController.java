@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -37,14 +38,26 @@ public class AIController {
 
         URI location = URI.create("/api/ai/sessions/" + session.getIdx());
         return ResponseEntity.created(location)
-                .body(AiSessionResponse.builder()
-                        .id(session.getIdx())
-                        .title(session.getTitle())
-                        .status(session.getStatus().name())
-                        .introMessage(intro)
-                        .startedAt(session.getStartedAt())
-                        .lastMessageAt(session.getLastMessageAt())
-                        .build());
+                .body(AiSessionResponse.from(session, intro));
+    }
+
+    //세션 목록 조회
+    @GetMapping("/sessions")
+    public ResponseEntity<List<AiSessionResponse>> getSessions(
+            @AuthenticationPrincipal Consumer user
+    ) {
+        List<AiSessionResponse> sessions = aiSessionService.getUserSessions(user);
+        return ResponseEntity.ok(sessions);
+    }
+
+    //단일 세션 조회
+    @GetMapping("/sessions/{sessionId}")
+    public ResponseEntity<AiSessionResponse> getSessionDetail(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Consumer user
+    ) {
+        AiSessionResponse response = aiSessionService.getSessionDetail(sessionId, user);
+        return ResponseEntity.ok(response);
     }
 
 
