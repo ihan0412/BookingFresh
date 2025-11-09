@@ -9,6 +9,7 @@ import est.oremi.backend12.bookingfresh.domain.session.repository.MessageReposit
 import est.oremi.backend12.bookingfresh.domain.session.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,5 +70,15 @@ public class AISessionService {
         Session session = sessionRepository.findByIdxAndUser(sessionId, user)
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
         return AiSessionResponse.from(session);
+    }
+
+    //세션 삭제
+    @Transactional
+    public void deleteSession(Long sessionId, Consumer user) {
+        // 해당 세션이 로그인 사용자 소유인지 확인
+        Session session = sessionRepository.findByIdxAndUser(sessionId, user)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+
+        sessionRepository.delete(session);
     }
 }

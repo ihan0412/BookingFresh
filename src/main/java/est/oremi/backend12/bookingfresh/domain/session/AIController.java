@@ -79,4 +79,14 @@ public class AIController {
         List<AiMessageResponse> responses = aiMessageService.getMessagesBySession(sessionId, user);
         return ResponseEntity.ok(responses);
     }
+
+    //세션 삭제
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<Void> deleteSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Consumer user
+    ) {
+        aiSessionService.deleteSession(sessionId, user);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
 }
