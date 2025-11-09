@@ -7,6 +7,7 @@ import lombok.Getter;
 @Builder
 public class AiMessageResponse {
     private Long sessionId;
+    private Long messageId;
     private String userMessage;
     private String aiMessage;
     private String structuredJson; // 구조화된 응답

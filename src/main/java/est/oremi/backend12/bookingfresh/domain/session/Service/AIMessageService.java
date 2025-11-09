@@ -1,9 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.session.Service;
 
-import com.openai.client.OpenAIClient;
-import com.openai.models.chat.completions.*;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.session.AiResponseFormatter;
 import est.oremi.backend12.bookingfresh.domain.session.AlanApiClient;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
@@ -18,16 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class AIService {
+public class AIMessageService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
     private final AlanApiClient alanApiClient;     // 앨런 API 호출용
-    private final OpenAIClient openAiClient;
-    private final AiResponseFormatter formatter;   // 목적별 구조화 로직
+    private final OpenAiService openAiService;
 
     @Value("${ai.alan.client-id}")
     private String alanClientId;
@@ -38,7 +33,7 @@ public class AIService {
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
 
         // 1.사용자 메시지 intent 분석 + 메시지 엔티티로 저장
-        Message.IntentType intent = getIntentFromMessage(req.getContent());
+        Message.IntentType intent = openAiService.getIntentFromMessage(req.getContent());
         Message userMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.USER)
@@ -52,7 +47,7 @@ public class AIService {
         String aiRawText = alanApiClient.askAlan(req.getContent(), alanClientId);
 
         // 3. 세션 목적 기반 구조화 (JSON)
-        AiResponseData structured = formatter.format(intent, aiRawText);
+        AiResponseData structured = openAiService.formatAlanResponse(intent, aiRawText);
 
         // 4. AI 응답 메시지 저장
         Message aiMsg = messageRepository.save(Message.builder()
@@ -70,6 +65,7 @@ public class AIService {
         // 5. DTO 응답
         return AiMessageResponse.builder()
                 .sessionId(session.getIdx())
+                .messageId(aiMsg.getIdx())
                 .userMessage(userMsg.getContent())
                 .aiMessage(aiMsg.getContent())
                 .structuredJson(aiMsg.getStructuredJson())
@@ -77,52 +73,5 @@ public class AIService {
                 .build();
     }
 
-    private Message.IntentType getIntentFromMessage(String userMessage) {
-        try {
-            //프롬프트 구성
-            String prompt = """
-            다음 문장의 의도를 분류하세요.
 
-            문장: %s
-            """.formatted(userMessage);
-
-            // 요청 파라미터 생성
-            ChatCompletionSystemMessageParam systemMsg =
-                    ChatCompletionSystemMessageParam.builder()
-                            .content("""
-                        너는 사용자의 요청을 분석해 의도를 분류하는 AI이다.
-                        반드시 아래 ENUM 이름 중 하나만 출력해야 한다:
-                        RECIPE_ASSISTANT, COOKING_IDEA, SHOPPING_ASSISTANT, GENERAL_CHAT.
-                        그 외 설명이나 문장은 절대 출력 금지.
-                        """)
-                            .build();
-
-            ChatCompletionUserMessageParam userMsg =
-                    ChatCompletionUserMessageParam.builder()
-                            .content(prompt)
-                            .build();
-
-            ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                    .model("gpt-4o-mini")
-                    .messages(List.of(
-                            ChatCompletionMessageParam.ofSystem(systemMsg),
-                            ChatCompletionMessageParam.ofUser(userMsg)
-                    ))
-                    .temperature(0.0)
-//                    .maxTokens(10)
-                    .build();
-
-            // 요청 전송 및 응답 수신
-            ChatCompletion completion = openAiClient.chat().completions().create(params);
-
-            // 응답에서 텍스트 추출
-            String intentName = completion.choices().get(0).message().content().orElse("")
-                    .trim();
-
-            // Enum 매핑
-            return Message.IntentType.valueOf(intentName.toUpperCase());
-        } catch (Exception e) {
-            return Message.IntentType.GENERAL_CHAT;
-        }
-    }
 }

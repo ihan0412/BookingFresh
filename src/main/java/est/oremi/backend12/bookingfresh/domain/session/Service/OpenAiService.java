@@ -1,12 +1,10 @@
-package est.oremi.backend12.bookingfresh.domain.session;
+package est.oremi.backend12.bookingfresh.domain.session.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
 import com.openai.models.ChatModel;
 
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.openai.models.chat.completions.StructuredChatCompletionCreateParams;
-import com.openai.models.chat.completions.StructuredChatCompletion;
+import com.openai.models.chat.completions.*;
 
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiResponseData;
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.RecipeSchema;
@@ -15,13 +13,15 @@ import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
-public class AiResponseFormatter {
+public class OpenAiService {
 
     private final OpenAIClient openAiClient;
 
-    public AiResponseData format(Message.IntentType purpose, String aiRawText) {
+    public AiResponseData formatAlanResponse(Message.IntentType purpose, String aiRawText) {
 
         return switch (purpose) {
             case RECIPE_ASSISTANT -> parseRecipe(aiRawText);
@@ -94,6 +94,55 @@ public class AiResponseFormatter {
         } catch (Exception e) {
             e.printStackTrace();
             return new AiResponseData("SUGGESTION", null, rawText);
+        }
+    }
+
+    public Message.IntentType getIntentFromMessage(String userMessage) {
+        try {
+            //프롬프트 구성
+            String prompt = """
+            다음 문장의 의도를 분류하세요.
+
+            문장: %s
+            """.formatted(userMessage);
+
+            // 요청 파라미터 생성
+            ChatCompletionSystemMessageParam systemMsg =
+                    ChatCompletionSystemMessageParam.builder()
+                            .content("""
+                        너는 사용자의 요청을 분석해 의도를 분류하는 AI이다.
+                        반드시 아래 ENUM 이름 중 하나만 출력해야 한다:
+                        RECIPE_ASSISTANT, COOKING_IDEA, SHOPPING_ASSISTANT, GENERAL_CHAT.
+                        그 외 설명이나 문장은 절대 출력 금지.
+                        """)
+                            .build();
+
+            ChatCompletionUserMessageParam userMsg =
+                    ChatCompletionUserMessageParam.builder()
+                            .content(prompt)
+                            .build();
+
+            ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
+                    .model("gpt-4o-mini")
+                    .messages(List.of(
+                            ChatCompletionMessageParam.ofSystem(systemMsg),
+                            ChatCompletionMessageParam.ofUser(userMsg)
+                    ))
+                    .temperature(0.0)
+//                    .maxTokens(10)
+                    .build();
+
+            // 요청 전송 및 응답 수신
+            ChatCompletion completion = openAiClient.chat().completions().create(params);
+
+            // 응답에서 텍스트 추출
+            String intentName = completion.choices().get(0).message().content().orElse("")
+                    .trim();
+
+            // Enum 매핑
+            return Message.IntentType.valueOf(intentName.toUpperCase());
+        } catch (Exception e) {
+            return Message.IntentType.GENERAL_CHAT;
         }
     }
 }
