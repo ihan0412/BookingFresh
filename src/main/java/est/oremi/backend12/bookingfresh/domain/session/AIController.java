@@ -1,11 +1,12 @@
 package est.oremi.backend12.bookingfresh.domain.session;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.session.Service.AIService;
+import est.oremi.backend12.bookingfresh.domain.session.Service.AIMessageService;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AISessionService;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageResponse;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiSessionResponse;
+import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ import java.net.URI;
 @RequestMapping("/api/ai")
 public class AIController {
     private final AISessionService aiSessionService;
-    private final AIService aiService;
+    private final AIMessageService aiMessageService;
 
     @PostMapping("/sessions")
     public ResponseEntity<AiSessionResponse> startNewSession(
@@ -27,26 +28,32 @@ public class AIController {
     ) {
         Session session = aiSessionService.createSession(user);
 
+        // 세션 생성 시 AI가 남긴 첫 system message를 찾아서 반환
+        String intro = session.getMessages().stream()
+                .filter(m -> m.getType() == Message.MessageType.SYSTEM)
+                .findFirst()
+                .map(Message::getContent)
+                .orElse("안녕하세요 😊");
+
         URI location = URI.create("/api/ai/sessions/" + session.getIdx());
         return ResponseEntity.created(location)
-                .body(AiSessionResponse.from(session));
+                .body(AiSessionResponse.builder()
+                        .id(session.getIdx())
+                        .title(session.getTitle())
+                        .status(session.getStatus().name())
+                        .introMessage(intro)
+                        .startedAt(session.getStartedAt())
+                        .lastMessageAt(session.getLastMessageAt())
+                        .build());
     }
 
-//    @PatchMapping("/sessions/{id}/purpose")
-//    public ResponseEntity<AiSessionResponse> setSessionPurpose(
-//            @PathVariable Long id,
-//            @RequestBody AiSessionPurposeRequest request
-//    ) {
-//        Session updated = aiSessionService.setSessionPurpose(id, request.getPurpose());
-//        return ResponseEntity.ok(AiSessionResponse.from(updated));
-//    }
 
     @PostMapping("/messages")
     public ResponseEntity<AiMessageResponse> sendMessage(
             @AuthenticationPrincipal Consumer user,
             @RequestBody AiMessageRequest request
     ) {
-        AiMessageResponse response = aiService.handleUserMessage(user, request);
+        AiMessageResponse response = aiMessageService.handleUserMessage(user, request);
         return ResponseEntity.ok(response);
     }
 }

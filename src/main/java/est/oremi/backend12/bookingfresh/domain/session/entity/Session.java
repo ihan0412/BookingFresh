@@ -28,16 +28,9 @@ public class Session {
     @Column(length = 100)
     private String title;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(length = 50)
-//    private SessionPurpose purpose;
-
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
     private SessionStatus status;
-
-    @Column(length = 200)
-    private String introMessage;
 
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
