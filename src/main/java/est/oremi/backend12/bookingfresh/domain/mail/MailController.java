@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.mail;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import est.oremi.backend12.bookingfresh.domain.order.OrderRepository;
@@ -25,7 +25,13 @@ public class MailController {
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
         Consumer consumer = order.getConsumer();
 
-        mailService.sendOrderConfirmationMail(consumer, order);
+        mailService.sendDeliveryReminderMail(
+                consumer.getEmail(),
+                consumer.getNickname(),
+                consumer.getId(),
+                order.getId(),
+                order.getDeliveryDateTime()
+        );
         return String.format("주문 확인 메일 발송 요청 완료 (주문번호: %d, 수신자: %s)", order.getId(), consumer.getEmail());
     }
 
@@ -36,7 +42,13 @@ public class MailController {
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문이 존재하지 않습니다."));
         Consumer consumer = order.getConsumer();
 
-        mailService.sendDeliveryReminderMail(consumer, order);
+        mailService.sendDeliveryReminderMail(
+                consumer.getEmail(),
+                consumer.getNickname(),
+                consumer.getId(),
+                order.getId(),
+                order.getDeliveryDateTime()
+        );
         return String.format("배송 리마인더 메일 발송 요청 완료 (주문번호: %d, 수신자: %s)", order.getId(), consumer.getEmail());
     }
 

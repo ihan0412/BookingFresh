@@ -1,5 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.mail;
 
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import est.oremi.backend12.bookingfresh.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +33,20 @@ public class MailScheduler {
         int successCount = 0;
         for (Order order : tomorrowOrders) {
             try {
-                mailService.sendDeliveryReminderMail(order.getConsumer(), order);
+                Consumer consumer = order.getConsumer(); // @Transactional 덕분에 LAZY 접근 안전
+
+                mailService.sendDeliveryReminderMail(
+                        consumer.getEmail(),
+                        consumer.getNickname(),
+                        consumer.getId(),
+                        order.getId(),
+                        order.getDeliveryDateTime()
+                );
+
                 successCount++;
             } catch (Exception e) {
-                // 개별 예외 MailService 내부 log.error()로 기록
+                // 개별 예외 MailService 내부 log.error()로 기록된다고 가정
+                log.error("[배송 리마인더 발송 실패] orderId={}, reason={}", order.getId(), e.getMessage());
             }
         }
 
