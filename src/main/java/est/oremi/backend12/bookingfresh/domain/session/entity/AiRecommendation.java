@@ -1,4 +1,4 @@
-package est.oremi.backend12.bookingfresh.domain.session;
+package est.oremi.backend12.bookingfresh.domain.session.entity;
 
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.persistence.*;

@@ -1,9 +1,8 @@
-package est.oremi.backend12.bookingfresh.domain.session;
+package est.oremi.backend12.bookingfresh.domain.session.entity;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.web.bind.support.SessionStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
