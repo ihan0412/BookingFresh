@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,20 @@ public class AIMessageService {
 
     @Value("${ai.alan.client-id}")
     private String alanClientId;
+
+    // 세션 내 메시지 전체 조회
+    public List<AiMessageResponse> getMessagesBySession(Long sessionId, Consumer user) {
+        // 사용자 소유 세션인지 검증
+        Session session = sessionRepository.findByIdxAndUser(sessionId, user)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+
+        List<Message> messages = messageRepository.findBySessionOrderByCreatedAtAsc(session);
+
+        return messages.stream()
+                .map(AiMessageResponse::from)
+                .toList();
+    }
+
 
     @Transactional
     public AiMessageResponse handleUserMessage(Consumer user, AiMessageRequest req){

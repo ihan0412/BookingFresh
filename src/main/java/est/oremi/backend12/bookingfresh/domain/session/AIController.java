@@ -69,4 +69,14 @@ public class AIController {
         AiMessageResponse response = aiMessageService.handleUserMessage(user, request);
         return ResponseEntity.ok(response);
     }
+
+    // 세션 내 메시지 목록 조회
+    @GetMapping("/messages/{sessionId}")
+    public ResponseEntity<List<AiMessageResponse>> getMessages(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Consumer user
+    ) {
+        List<AiMessageResponse> responses = aiMessageService.getMessagesBySession(sessionId, user);
+        return ResponseEntity.ok(responses);
+    }
 }
