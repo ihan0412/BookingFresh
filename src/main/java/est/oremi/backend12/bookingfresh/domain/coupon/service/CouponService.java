@@ -3,12 +3,8 @@ package est.oremi.backend12.bookingfresh.domain.coupon.service;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.coupon.CategoryCoupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.NewCouponRegisteredEvent;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.*;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CategoryInfo;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponRegistrationRequest;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponResponse;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponResponse;
 import est.oremi.backend12.bookingfresh.domain.coupon.repository.CategoryCouponRepository;
 import est.oremi.backend12.bookingfresh.domain.coupon.repository.CategoryRepository;
 import est.oremi.backend12.bookingfresh.domain.coupon.repository.CouponRepository;
@@ -23,6 +19,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -149,8 +148,11 @@ public class CouponService {
         System.out.println("회원 ID " + newConsumer.getId() + "에게 " + userCouponsToSave.size() + "개의 초기 쿠폰이 발급되었습니다.");
     }
 
+
+    // Todo: 상품에 대한 쿠폰 적용 가격도 필요함
     private final ProductRepository productRepository;
     // 사용자가 소유하고 있으며, 상품에 적용 가능(카테고리)한 모든 쿠폰 조회
+/*
     @Transactional(readOnly = true)
     public List<UserCouponResponse> findApplicableCouponsForUserAndProduct(Long consumerId, Long productId) {
 
@@ -173,6 +175,7 @@ public class CouponService {
                 .map(uc -> convertUserCouponToResponse(uc))
                 .toList();
     }
+*/
 
 
     // 쿠폰이 카테고리에 적용 가능한지 확인하는 도우미 메소드
@@ -186,7 +189,6 @@ public class CouponService {
                 .anyMatch(mapping -> mapping.getCategory().getId().equals(categoryId));
     }
 
-    // UserCoupon을 UserCouponResponse DTO로 변환
     @Transactional(readOnly = true)
     protected UserCouponResponse convertUserCouponToResponse(UserCoupon userCoupon) {
         Coupon coupon = userCoupon.getCoupon();
@@ -201,5 +203,118 @@ public class CouponService {
                 .toList();
 
         return UserCouponResponse.from(userCoupon, categories);
+    }
+
+    // 쿠폰 적용 로직
+    private String calculateDiscountAmount(BigDecimal productPrice, Coupon coupon) {
+        try {
+            BigDecimal discountValue = new BigDecimal(coupon.getDiscountValue());
+            BigDecimal discountAmount = BigDecimal.ZERO;
+
+            // 100 초과면 가격 할인 (Fixed Amount), 100 이하면 퍼센트 할인
+            if (discountValue.compareTo(new BigDecimal("100")) > 0) {
+                discountAmount = discountValue;
+            } else {
+                // 퍼센트 할인 (Percentage)
+                BigDecimal percentage = discountValue.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+
+                // 소수점 이하는 버림 (내림 처리)
+                discountAmount = productPrice.multiply(percentage).setScale(0, RoundingMode.DOWN);
+            }
+
+            if (discountAmount.compareTo(productPrice) > 0) {
+                discountAmount = productPrice;
+            }
+
+            // 계산된 BigDecimal을 String으로 반환
+            return discountAmount.toPlainString();
+
+        } catch (NumberFormatException e) {
+            System.err.println("Coupon ID " + coupon.getId() + " has invalid discountValue: " + coupon.getDiscountValue());
+            return "0"; // 오류 발생 시 0원 할인으로 처리
+        }
+    }
+
+    @Transactional(readOnly = true)
+    protected UserCouponProductResponse convertUserCouponToProductResponse(
+            UserCoupon userCoupon, BigDecimal productPrice, String calculatedDiscountAmountStr) {
+
+        Coupon coupon = userCoupon.getCoupon();
+
+        // String을 BigDecimal로 변환하여 최종 가격 계산
+        BigDecimal calculatedDiscountAmount = new BigDecimal(calculatedDiscountAmountStr);
+        BigDecimal finalPrice = productPrice.subtract(calculatedDiscountAmount);
+
+        // 최종 가격도 String으로 변환
+        String finalPriceStr = finalPrice.toPlainString();
+        String minOrderAmountStr = coupon.getMinOrderAmount();
+
+        // 카테고리 정보 조회
+        List<CategoryInfo> categories = getApplicableCategoryInfos(coupon.getId());
+
+        // 최종 DTO 반환 (minOrderAmount는 DTO 내부에서 Coupon 엔티티를 통해 가져감)
+        return UserCouponProductResponse.from(
+                userCoupon,
+                categories,
+                calculatedDiscountAmountStr,
+                finalPriceStr);
+    }
+
+    // 사용자가 소유하고 있으며, 상품에 적용 가능(카테고리)한 모든 쿠폰 조회
+    @Transactional(readOnly = true)
+    public List<UserCouponProductResponse> findApplicableCouponsForUserAndProductWithPrice(
+            Long consumerId, Long productId) {
+
+        // 상품 ID로 상품 객체 및 가격 추출
+        Product product = productRepository.findByIdWithCategory(productId)
+                .orElseThrow(() -> new NotFoundException("상품 ID " + productId + "를 찾을 수 없습니다."));
+
+        Long productCategoryId = product.getCategory().getId();
+        BigDecimal productPrice = product.getPrice();
+
+        // 해당 사용자의 모든 유효한 UserCoupon 조회
+        List<UserCoupon> userCoupons = userCouponRepository.findByConsumerIdWithCoupon(consumerId);
+
+        // 필터링, 할인 금액 계산 및 DTO 변환
+        List<UserCouponProductResponse> responses = userCoupons.stream()
+                // 사용하지 않았고, 쿠폰 자체가 활성화된 경우
+                .filter(uc -> !uc.getIsUsed() && uc.getCoupon().getIsActive())
+                // 카테고리 적용 가능
+                .filter(uc -> isCouponApplicableToCategory(uc.getCoupon().getId(), productCategoryId))
+                // 최소 주문 금액 미달 시 아예 제외
+                .filter(uc -> {
+                    try {
+                        BigDecimal minOrderAmount = new BigDecimal(uc.getCoupon().getMinOrderAmount());
+                        return productPrice.compareTo(minOrderAmount) >= 0;
+                    } catch (NumberFormatException e) {
+                        System.err.println("Coupon ID " + uc.getCoupon().getId() + " minOrderAmount is invalid.");
+                        return false;
+                    }
+                })
+                .map(uc -> {
+                    String calculatedDiscountAmountStr = calculateDiscountAmount(productPrice, uc.getCoupon()); // 할인 금액 계산
+                    // DTO로 변환
+                    return convertUserCouponToProductResponse(uc, productPrice, calculatedDiscountAmountStr);
+                })
+                .toList();
+
+        // 계산된 할인 금액 내림차순 정렬 -> 최대 할인 쿠폰부터 조회
+        return responses.stream()
+                .sorted(Comparator.comparing(
+                        // 정렬 기준만 BigDecimal로 파싱하여 사용
+                        dto -> new BigDecimal(dto.getCalculatedDiscountAmount()),
+                        Comparator.reverseOrder()))
+                .toList();
+    }
+
+    // CategoryInfo List 조회
+    private List<CategoryInfo> getApplicableCategoryInfos(Long couponId) {
+        // 이 쿠폰이 적용 가능한 '전체' 카테고리 목록 조회
+        List<CategoryCoupon> allMappings = categoryCouponRepository.findByCouponId(couponId);
+        return allMappings.stream()
+                .map(CategoryCoupon::getCategory)
+                .map(CategoryInfo::from)
+                .distinct()
+                .toList();
     }
 }

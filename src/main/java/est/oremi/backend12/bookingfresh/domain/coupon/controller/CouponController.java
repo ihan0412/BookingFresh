@@ -4,6 +4,7 @@ import com.sun.security.auth.UserPrincipal;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponRegistrationRequest;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponResponse;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponProductResponse;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponResponse;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class CouponController {
         }
     }
 
+    // 쿠폰과 쿠폰이 적용 가능한 모든 카테고리 조회
     @GetMapping
     public ResponseEntity<List<CouponResponse>> getAllCoupons() {
         List<CouponResponse> response = couponService.findAllCouponsWithCategories();
@@ -53,9 +55,10 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
+    // 사용자가 소유하고 사용가능한 모든 쿠폰 조회
     @GetMapping("/consumer/{consumerId}")
     public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(@PathVariable Long consumerId) {
-        // 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다.
+        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다.
         if (consumerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -65,17 +68,37 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
+/*    // 상품에 사용 가능한, 사용자가 소유하고 있는 쿠폰 조회
     @GetMapping("/available/{productId}/consumer/{consumerId}")
     public ResponseEntity<List<UserCouponResponse>> getApplicableUserCoupons(
             @PathVariable Long productId,
             @PathVariable Long consumerId,
             @AuthenticationPrincipal UserPrincipal currentUser) {
-
         if (productId == null || consumerId == null) {
             return ResponseEntity.badRequest().build();
         }
         List<UserCouponResponse> response = couponService.findApplicableCouponsForUserAndProduct(consumerId, productId);
         // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록을 반환
+        // 여기서 response 정렬하고 가자.
+        return ResponseEntity.ok(response);
+    }*/
+
+    // 사용자가 사용 가능한, 소유하고 있는, 할인금액을 반영한 쿠폰 리스트
+    @GetMapping("/available/{productId}/consumer/{consumerId}/prices")
+    // ⭐ 반환 타입을 UserCouponProductResponse 리스트로 변경합니다.
+    public ResponseEntity<List<UserCouponProductResponse>> getApplicableUserCouponsWithPrice(
+            @PathVariable Long productId,
+            @PathVariable Long consumerId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다. PathValuable 말고
+        if (productId == null || consumerId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        // ⭐ Service 호출은 그대로 유지 (매개변수가 consumerId, productId 2개로 통일됨)
+        List<UserCouponProductResponse> response = couponService.findApplicableCouponsForUserAndProductWithPrice(consumerId, productId);
+
+        // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록 (할인 금액 포함 및 정렬됨) 반환
         return ResponseEntity.ok(response);
     }
 }

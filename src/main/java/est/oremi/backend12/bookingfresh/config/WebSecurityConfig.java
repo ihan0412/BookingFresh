@@ -43,7 +43,8 @@ public class WebSecurityConfig {
                                         "/api/auth/logout",
                                         "/api/coupons",
                                         "/api/coupons/consumer/*", // 사용자 쿠폰 조회
-                                        "/api/coupons/available/*/consumer/*", // 상품 적용 가능 쿠폰 조회, /api/coupons/available/{productId}/consumer/{consumerId}
+                                        "/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함
+                                        // "/api/coupons/available/*/consumer/*", // 상품 적용 가능 쿠폰 조회, /api/coupons/available/{productId}/consumer/{consumerId}
                                         "/api/login"     // POST /api/login (로그인 처리)
                                 ).permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게

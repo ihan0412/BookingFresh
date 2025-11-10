@@ -72,7 +72,7 @@ VALUES ('WELCOME_10', '신규 회원 10% 할인', 'PERCENT', 10, 10000, TRUE);
 
 -- 2. 5000원 정액 할인 쿠폰 (20,000원 이상 구매 시 적용 가능)
 INSERT INTO coupons (coupon_code, coupon_name, discount_type, discount_value, min_order_amount, is_active)
-VALUES ('FIXED_5000', '5천원 정액 할인 쿠폰', 'FIXED', 5000, 20000, TRUE);
+VALUES ('FIXED_5000', '5천원 정액 할인 쿠폰', 'FIXED', 5000, 10000, TRUE);
 
 -- 3. 비활성화된 쿠폰 (테스트용 또는 만료된 쿠폰)
 INSERT INTO coupons (coupon_code, coupon_name, discount_type, discount_value, min_order_amount, is_active)
