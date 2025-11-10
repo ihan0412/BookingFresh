@@ -29,4 +29,26 @@ public class AlanApiClient {
         }
     }
 
+    /**
+     * Alan API - 에이전트 상태 초기화 (agent_state 리셋)
+     */
+    public boolean resetAlanState(String clientId) {
+        try {
+            webClient.delete()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/reset-state")
+                            .queryParam("client_id", clientId)
+                            .build())
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError,
+                            response -> Mono.error(new RuntimeException("⚠️ Alan 상태 초기화 실패")))
+                    .toBodilessEntity()
+                    .block();
+
+            return true; // 정상 호출 시 true 반환
+        } catch (Exception e) {
+            System.err.println("⚠️ Alan Reset 호출 오류: " + e.getMessage());
+            return false;
+        }
+    }
 }
