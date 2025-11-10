@@ -67,6 +67,7 @@ public class ConsumerController {
                     .httpOnly(true)
                     .secure(true) // HTTP 환경 테스트를 위해 false (운영 시 true)
                     .path("/api") // api 경로에 쿠키 전송
+                    .sameSite("Strict")
                     .maxAge(jwtTokenProvider.getRefreshTokenExpirationSeconds()) // RT 만료 시간
                     .build();
 

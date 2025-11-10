@@ -65,3 +65,30 @@ VALUES ('쌀 식빵', '480g', 5500, '/images/bread.jpg', 100, 7),
        ('블루베리번', '180g', 4800, '/images/blueberry_burn.jpg', 100, 7),
        ('모닝빵', '250g 2개', 14400, '/images/morning_bread.jpg', 100, 7),
        ('바게트빵', '280g', 4940, '/images/bargett.jpg', 100, 7);
+
+-- 1. 신규 가입 축하 10% 할인 쿠폰 (전체 상품 적용 가능 가정)
+INSERT INTO coupons (coupon_code, coupon_name, discount_type, discount_value, min_order_amount, is_active)
+VALUES ('WELCOME_10', '신규 회원 10% 할인', 'PERCENT', 10, 10000, TRUE);
+
+-- 2. 5000원 정액 할인 쿠폰 (20,000원 이상 구매 시 적용 가능)
+INSERT INTO coupons (coupon_code, coupon_name, discount_type, discount_value, min_order_amount, is_active)
+VALUES ('FIXED_5000', '5천원 정액 할인 쿠폰', 'FIXED', 5000, 20000, TRUE);
+
+-- 3. 비활성화된 쿠폰 (테스트용 또는 만료된 쿠폰)
+INSERT INTO coupons (coupon_code, coupon_name, discount_type, discount_value, min_order_amount, is_active)
+VALUES ('EXPIRED_TEST', '만료된 테스트 쿠폰', 'PERCENT', 5, 0, FALSE);
+
+-- CategoryCoupon Mapping (CategoryCoupon ID 1 ~ 9)
+
+-- WELCOME_10 (Coupon ID 1): 모든 카테고리 (ID 1~7)에 적용
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 1); -- VEGETABLES
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 2); -- FROZEN_FOODS
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 3); -- DAIRY
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 4); -- MEAT
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 5); -- SEAFOOD
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 6); -- FRUIT
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (1, 7); -- BREAD
+
+-- FIXED_5000 (Coupon ID 2): DAIRY(3), MEAT(4)에만 적용
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (2, 3); -- DAIRY
+INSERT INTO category_coupons (coupon_idx, category_idx) VALUES (2, 4); -- MEAT
