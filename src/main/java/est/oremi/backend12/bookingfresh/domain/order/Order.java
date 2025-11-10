@@ -8,7 +8,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Setter;
 
+
+@Setter
 @Entity
 @Getter
 @Table(name = "orders")
@@ -24,7 +27,9 @@ public class Order {
     private Long id;
 
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalPrice; //물품 전체 가격
+
+    private BigDecimal final_cost; // 쿠폰 적용 후 최종 가격
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
