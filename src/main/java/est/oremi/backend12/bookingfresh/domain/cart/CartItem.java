@@ -3,27 +3,47 @@ package est.oremi.backend12.bookingfresh.domain.cart;
 
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "cart_items")
+@Getter
+@NoArgsConstructor
 public class CartItem {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+  @Id @GeneratedValue
   private Long id;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Cart cart;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Product product;
 
   private int quantity;
 
-  @ManyToOne
-  @JoinColumn(name = "cart_id")
-  private Cart cart;
+  public CartItem(Cart cart, Product product, int quantity) {
+    this.cart = cart;
+    this.product = product;
+    this.quantity = quantity;
+  }
 
-  @ManyToOne
-  @JoinColumn(name = "product_id")
-  private Product product;
+
+  public void addQuantity(int amount) {
+    this.quantity += amount;
+  }
+
+
+  public void updateQuantity(int newQuantity) {
+    this.quantity = newQuantity;
+  }
 }
+
