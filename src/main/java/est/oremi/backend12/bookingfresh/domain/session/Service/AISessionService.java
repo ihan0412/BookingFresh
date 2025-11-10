@@ -8,6 +8,7 @@ import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,18 +21,35 @@ public class AISessionService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
     private final OpenAiService openAiService;
+    private final AlanApiClient alanApiClient;
+
+//    @Value("${ai.alan.client-id}")
+//    private String alanClientId;
 
     // 세션 생성
     public Session createSession(Consumer user) {
-        Session session = Session.builder()
+
+//        // 기존 ACTIVE 세션 존재 시 종료 처리
+//        sessionRepository.findByUserAndStatus(user, Session.SessionStatus.ACTIVE)
+//                .ifPresent(session -> {
+//                    session.endSession();
+//                    sessionRepository.save(session);
+//                });
+//
+//        // Alan 서버 상태 초기화
+//        alanApiClient.resetAlanState(alanClientId);
+
+
+        Session newSession = Session.builder()
                 .user(user)
                 .title("새 AI 대화") // 임시 기본값
                 .status(Session.SessionStatus.ACTIVE)
                 .startedAt(LocalDateTime.now())
                 .lastMessageAt(LocalDateTime.now())
+                .context("")
                 .build();
 
-        Session saved = sessionRepository.save(session);
+        Session saved = sessionRepository.save(newSession);
 
         // 시작 메시지 자동 생성
         Message systemMsg = Message.builder()
@@ -46,6 +64,7 @@ public class AISessionService {
         return saved;
     }
 
+    //세션 제목 자동 생성 (첫 유저 메시지 후)
     public void handlePostMessage(Session session, Message userMessage) {
         // 세션의 첫 메시지일 경우에만
         if (session.getMessages().size() == 1 || session.getTitle() == null) {
@@ -78,7 +97,29 @@ public class AISessionService {
         // 해당 세션이 로그인 사용자 소유인지 확인
         Session session = sessionRepository.findByIdxAndUser(sessionId, user)
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
-
         sessionRepository.delete(session);
+    }
+
+    // 세션 컨텍스트 관리
+    @Transactional
+    public void updateSessionContext(Session session) {
+        // 최근 N개 메시지 조회
+        List<Message> messages = messageRepository
+                .findTop5BySessionOrderByCreatedAtDesc(session);
+
+        // role별 구분 포함한 문자열 병합
+        StringBuilder sb = new StringBuilder();
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            Message m = messages.get(i);
+            sb.append(m.getSenderType())
+                    .append(": ")
+                    .append(m.getContent())
+                    .append("\n");
+        }
+
+        // 세션 엔티티의 contextSummary 갱신
+        session.setContext(sb.toString());
+        session.updateLastMessageAt(LocalDateTime.now());
+        sessionRepository.save(session);
     }
 }

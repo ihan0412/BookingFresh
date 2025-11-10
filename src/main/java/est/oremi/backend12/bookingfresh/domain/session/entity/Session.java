@@ -36,9 +36,9 @@ public class Session {
     private LocalDateTime endedAt;
     private LocalDateTime lastMessageAt;
 
-    //최근 대화 요약 (LLM 대화 유지용)
+    //최근 대화 내용
     @Column(columnDefinition = "TEXT")
-    private String contextSummary;
+    private String context;
 
     // 연관 관계
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -48,7 +48,7 @@ public class Session {
     private List<AiRecommendation> recommendations = new ArrayList<>();
 
     public enum SessionStatus {
-        ACTIVE, PAUSED, ENDED
+        ACTIVE, ENDED
     }
 
     @PrePersist
