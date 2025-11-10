@@ -25,7 +25,6 @@ public class OpenAiService {
 
         return switch (purpose) {
             case RECIPE_ASSISTANT -> parseRecipe(aiRawText);
-//            case SHOPPING_ASSISTANT -> parseShopping(aiRawText);
             case COOKING_IDEA -> parseSuggestion(aiRawText);
             default -> new AiResponseData("TEXT", null, aiRawText);
         };
@@ -41,33 +40,23 @@ public class OpenAiService {
                             .build();
 
             // 모델 호출
-            StructuredChatCompletion<RecipeSchema> completion =
-                    openAiClient.chat().completions().create(params);
+//            StructuredChatCompletion<RecipeSchema> completion =
+//                    openAiClient.chat().completions().create(params);
+            var completion = openAiClient.chat().completions().create(params);
+
 
             // 구조화된 결과 추출
-            RecipeSchema  recipe = completion.choices().get(0).message().content().orElse(null);;
+            RecipeSchema recipe = completion.choices().get(0).message().content().orElse(null);;
             String json = new ObjectMapper().writeValueAsString(recipe);
 
             return new AiResponseData("RECIPE", json, rawText);
 
 
         } catch (Exception e) {
+            e.printStackTrace();
             return new AiResponseData("RECIPE", null, rawText);
         }
     }
-
-//    private AiResponseData parseShopping(String raw) {
-//        // TODO: OpenAI structured output 적용
-////        String json = """
-////            {
-////              "items": [
-////                {"productName": "감자", "productId": 12},
-////                {"productName": "두부", "productId": 33}
-////              ]
-////            }
-////        """;
-//        return new AiResponseData("SHOPPING", json, raw);
-//    }
 
     private AiResponseData parseSuggestion(String rawText) {
         try {
@@ -112,7 +101,7 @@ public class OpenAiService {
                             .content("""
                         너는 사용자의 요청을 분석해 의도를 분류하는 AI이다.
                         반드시 아래 ENUM 이름 중 하나만 출력해야 한다:
-                        RECIPE_ASSISTANT, COOKING_IDEA, SHOPPING_ASSISTANT, GENERAL_CHAT.
+                        RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT.
                         그 외 설명이나 문장은 절대 출력 금지.
                         """)
                             .build();

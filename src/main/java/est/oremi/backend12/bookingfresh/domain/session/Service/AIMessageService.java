@@ -59,7 +59,8 @@ public class AIMessageService {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        // 2. 첫 메시지라면 세션 타이틀 생성
+        // 2.세션의 context 업데이트, 첫 메시지라면 세션 타이틀 생성
+        aiSessionService.updateSessionContext(session);
         aiSessionService.handlePostMessage(session, userMsg);
 
         // 3. 앨런 LLM API 호출
@@ -92,5 +93,8 @@ public class AIMessageService {
                 .build();
     }
 
-
+    public Message findById(Long messageId) {
+        return messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
+    }
 }

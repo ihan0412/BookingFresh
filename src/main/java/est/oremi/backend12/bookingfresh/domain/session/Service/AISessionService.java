@@ -122,4 +122,16 @@ public class AISessionService {
         session.updateLastMessageAt(LocalDateTime.now());
         sessionRepository.save(session);
     }
+
+    public Session findByIdAndUser(Long sessionId, Consumer user) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+
+        // 세션 소유자 체크 (Consumer 엔티티 구조에 맞춰 비교)
+        if (!session.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("해당 세션에 대한 권한이 없습니다.");
+        }
+
+        return session;
+    }
 }

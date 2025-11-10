@@ -1,8 +1,9 @@
 package est.oremi.backend12.bookingfresh.domain.session.entity;
 
-import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,26 +24,21 @@ public class AiRecommendation {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "message_id")
-    private Message message; // 특정 메시지와 연관된 추천일 경우만 사용
+    private Message message;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    // 추천 당시의 상품 정보 (스냅샷)
+    private Long productId;
+    private String productName;
+    private BigDecimal price;
+    private String imageUrl;
 
-    @Column(length = 255)
-    private String reason; // 추천 이유 (예: "레시피 재료 추천")
-
-    private Integer rank; // 추천 우선순위
-
-    @Column(columnDefinition = "TEXT")
-    private String structuredData; // LLM에서 받은 원본 JSON or 텍스트
-
+//    private Integer rank; // 추천 순서
     private LocalDateTime createdAt;
 
     @PrePersist
     public void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }
