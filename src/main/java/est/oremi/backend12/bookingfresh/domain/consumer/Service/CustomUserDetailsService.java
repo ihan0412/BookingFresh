@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.consumer.Service;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
+import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import jakarta.transaction.Transactional;

@@ -1,11 +1,8 @@
 package est.oremi.backend12.bookingfresh.domain.consumer.Service;
 
 import est.oremi.backend12.bookingfresh.config.jwt.JwtTokenProvider;
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.AddConsumerRequest;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.ConsumerResponse;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.LoginRequest;
-import est.oremi.backend12.bookingfresh.domain.consumer.dto.TokenResponse;
+import est.oremi.backend12.bookingfresh.domain.consumer.dto.*;
+import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.RefreshToken;
 import est.oremi.backend12.bookingfresh.domain.consumer.repository.RefreshTokenRepository;
@@ -201,5 +198,57 @@ public class ConsumerService {
             System.err.println("로그아웃 최종 실패! 원인: " + e.getMessage());
             throw new RuntimeException("Refresh Token 삭제 중 오류 발생", e);
         }
+    }
+
+    @Transactional
+    public ConsumerResponse updateConsumerInfo(Long consumerId, ConsumerUpdateRequest request) {
+        Consumer consumer = consumerRepository.findById(consumerId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 ID: " + consumerId + " 를 찾을 수 없습니다."));
+
+        // 닉네임 변경 검사 및 처리
+        if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
+            String newNickname = request.getNickname().trim();
+
+            // 기존 닉네임과 다를 경우에만 중복 검사
+            if (!consumer.getNickname().equals(newNickname)) {
+                if (consumerRepository.existsByNickname(newNickname)) {
+                    throw new IllegalArgumentException("이미 사용 중인 닉네임 입니다: " + newNickname);
+                }
+            }
+        }
+
+        // 비밀번호 변경 검사 및 처리
+        if (request.getNewPassword() != null && !request.getNewPassword().trim().isEmpty()) {
+            String currentPassword = request.getCurrentPassword();
+            String newPassword = request.getNewPassword();
+            String newPasswordConfirm = request.getNewPasswordConfirm();
+
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                throw new IllegalArgumentException("비밀번호 변경을 위해 현재 비밀번호를 입력해야 합니다.");
+            }
+
+            if (!newPassword.equals(newPasswordConfirm)) {
+                throw new IllegalArgumentException("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.");
+            }
+
+            // 현재 비밀번호 일치 확인 (PasswordEncoder 사용)
+            if (!encoder.matches(currentPassword, consumer.getPassword())) {
+                throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+            }
+
+            // 새 비밀번호 암호화 후 업데이트
+            String encodedNewPassword = encoder.encode(newPassword);
+            consumer.updatePassword(encodedNewPassword);
+        }
+
+        // 닉네임 및 주소 정보 업데이트 (비밀번호 변경과 별개로 처리)
+        // DTO 필드가 null이거나 비어있으면 엔티티의 updateInfo 메서드에서 무시됨.
+        consumer.updateInfo(
+                request.getNickname(),
+                request.getAddress(),
+                request.getDetailAddress()
+        );
+
+        return new ConsumerResponse(consumer);
     }
 }

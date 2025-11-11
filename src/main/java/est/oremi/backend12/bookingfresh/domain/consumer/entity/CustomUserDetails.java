@@ -37,4 +37,8 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    public Long getId() {
+        return consumer.getId();
+    }
 }
