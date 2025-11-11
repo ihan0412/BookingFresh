@@ -20,7 +20,7 @@ public class MailService {
 
     //주문 확인 메일 발송
     @Async
-    public void sendOrderConfirmationMail(Consumer consumer, Order order) {
+    public void sendOrderConfirmationMail(String email, String nickname, Long consumerId, Long orderId, LocalDateTime deliveryDateTime) {
         String title = "[BookingFresh] 주문이 접수되었습니다.";
         String content = String.format("""
                 안녕하세요, %s님!
@@ -31,17 +31,17 @@ public class MailService {
 
                 감사합니다.
                 """,
-                consumer.getNickname(),
-                order.getId(),
-                order.getDeliveryDateTime()
+                nickname,
+                orderId,
+                deliveryDateTime.toLocalDate()
         );
 
         // MailType.ORDER_CONFIRMATION 으로 메일 및 로그 처리
-        sendAndLog(consumer, MailLog.MailType.ORDER_CONFIRMATION, title, content);
+        sendAndLog(email, consumerId, MailLog.MailType.ORDER_CONFIRMATION, title, content);
     }
 
     @Async
-    public void sendDeliveryReminderMail(Consumer consumer, Order order) {
+    public void sendDeliveryReminderMail(String email, String nickname, Long consumerId, Long orderId, LocalDateTime deliveryDateTime) {
         String title = "[BookingFresh] 내일 배송 예정 안내";
         String content = String.format("""
                 안녕하세요, %s님!
@@ -52,22 +52,22 @@ public class MailService {
 
                 감사합니다.
                 """,
-                consumer.getNickname(),
-                order.getId(),
-                order.getDeliveryDateTime()
+                nickname,
+                deliveryDateTime.toLocalDate(),
+                orderId
         );
 
         // MailType.DELIVERY_REMINDER 로 발송
-        sendAndLog(consumer, MailLog.MailType.DELIVERY_REMINDER, title, content);
+        sendAndLog(email, consumerId, MailLog.MailType.DELIVERY_REMINDER, title, content);
     }
 
 
     //발송 및 로그 처리 공통 로직
-    private void sendAndLog(Consumer consumer, MailLog.MailType type, String title, String content) {
+    private void sendAndLog(String email, Long consumerId, MailLog.MailType type, String title, String content) {
 
         //MailLog 엔티티 생성 및 PENDING 저장
         MailLog mailLog = MailLog.builder()
-                .consumer(consumer)
+                .consumerId(consumerId)
                 .mailType(type)
                 .title(title)
                 .content(content)
@@ -79,7 +79,7 @@ public class MailService {
         try {
             // 메일 발송
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(consumer.getEmail());
+            message.setTo(email);
             message.setSubject(title);
             message.setText(content);
 
@@ -87,12 +87,12 @@ public class MailService {
 
             // 성공 시 상태 업데이트
             mailLog.setStatus(MailLog.MailStatus.SENT);
-            log.info("[메일 발송 성공] 대상: {}, 제목: {}", consumer.getEmail(), title);
+            log.info("[메일 발송 성공] 대상: {}, 제목: {}", email, title);
 
         } catch (Exception e) {
             // 실패 시 상태 FAILED 로 변경
             mailLog.setStatus(MailLog.MailStatus.FAILED);
-            log.error("[메일 발송 실패] 대상: {}, 사유: {}", consumer.getEmail(), e.getMessage());
+            log.error("[메일 발송 실패] 대상: {}, 사유: {}", email, e.getMessage());
         } finally {
             mailLogRepository.save(mailLog);
         }
