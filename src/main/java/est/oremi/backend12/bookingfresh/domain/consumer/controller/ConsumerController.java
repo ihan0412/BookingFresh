@@ -67,6 +67,7 @@ public class ConsumerController {
                     .httpOnly(true)
                     .secure(true) // HTTP 환경 테스트를 위해 false (운영 시 true)
                     .path("/api") // api 경로에 쿠키 전송
+                    .sameSite("Strict")
                     .maxAge(jwtTokenProvider.getRefreshTokenExpirationSeconds()) // RT 만료 시간
                     .build();
 
@@ -113,7 +114,8 @@ public class ConsumerController {
     @PostMapping("/auth/logout")
     public ResponseEntity<String> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
 
-        // Todo: DB Refresh Token 삭제 로직 (ConsumerService에 구현 필요)
+        // Todo: DB Refresh Token 삭제 로직 (ConsumerService에 구현 필요), 리팩토링?
+        // 간단하게 쿠키 자체를 조회해 삭제
         consumerService.logout(refreshToken);
 
         // 브라우저의 Refresh Token 쿠키를 만료시켜 삭제
