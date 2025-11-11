@@ -102,7 +102,7 @@ public class AIController {
         Session session = aiSessionService.findByIdAndUser(request.getSessionId(), user);
         Message aiMsg = aiMessageService.findById(request.getMessageId());
         AiResponseData aiResponse = new AiResponseData(
-                aiMsg.getIntent().name(),        // or aiMsg.getResponseType()
+                aiMsg.getIntent().name(),
                 aiMsg.getStructuredJson(),       // parseRecipe 결과 JSON
                 aiMsg.getContent()               // 원본 AI 텍스트
         );
