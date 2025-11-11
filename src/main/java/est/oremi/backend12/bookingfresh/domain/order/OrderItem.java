@@ -13,7 +13,12 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import lombok.Getter;
+import lombok.Setter;
 
+
+@Getter
+@Setter
 @Entity
 @Getter
 @Table(name = "order_items")

@@ -1,4 +1,4 @@
-package est.oremi.backend12.bookingfresh.domain.session;
+package est.oremi.backend12.bookingfresh.domain.session.entity;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
@@ -11,6 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "ai_sessions")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -18,7 +19,7 @@ public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long sessionIdx;
+    private Long idx;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_idx", nullable = false)
@@ -27,9 +28,17 @@ public class Session {
     @Column(length = 100)
     private String title;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private SessionStatus status;
+
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
     private LocalDateTime lastMessageAt;
+
+    //최근 대화 내용
+    @Column(columnDefinition = "TEXT")
+    private String context;
 
     // 연관 관계
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -37,4 +46,24 @@ public class Session {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AiRecommendation> recommendations = new ArrayList<>();
+
+    public enum SessionStatus {
+        ACTIVE, ENDED
+    }
+
+    @PrePersist
+    public void onCreate() {
+        if (this.startedAt == null) {
+            this.startedAt = LocalDateTime.now();
+        }
+    }
+
+    public void updateLastMessageAt(LocalDateTime time) {
+        this.lastMessageAt = time;
+    }
+
+    public void endSession() {
+        this.status = SessionStatus.ENDED;
+        this.endedAt = LocalDateTime.now();
+    }
 }
