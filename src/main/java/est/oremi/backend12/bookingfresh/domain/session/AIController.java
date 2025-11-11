@@ -30,16 +30,16 @@ public class AIController {
     ) {
         Session session = aiSessionService.createSession(user);
 
-        // 세션 생성 시 AI가 남긴 첫 system message를 찾아서 반환
-        String intro = session.getMessages().stream()
-                .filter(m -> m.getType() == Message.MessageType.SYSTEM)
-                .findFirst()
-                .map(Message::getContent)
-                .orElse("안녕하세요 😊");
+//        // 세션 생성 시 AI가 남긴 첫 system message를 찾아서 반환
+//        String intro = session.getMessages().stream()
+//                .filter(m -> m.getType() == Message.MessageType.SYSTEM)
+//                .findFirst()
+//                .map(Message::getContent)
+//                .orElse("안녕하세요 😊");
 
         URI location = URI.create("/api/ai/sessions/" + session.getIdx());
         return ResponseEntity.created(location)
-                .body(AiSessionResponse.from(session, intro));
+                .body(AiSessionResponse.from(session));
     }
 
     //세션 목록 조회

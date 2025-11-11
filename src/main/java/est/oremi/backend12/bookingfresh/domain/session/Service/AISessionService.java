@@ -49,19 +49,20 @@ public class AISessionService {
                 .context("")
                 .build();
 
-        Session saved = sessionRepository.save(newSession);
-
-        // 시작 메시지 자동 생성
-        Message systemMsg = Message.builder()
-                .session(saved)
-                .senderType(Message.SenderType.AI)
-                .type(Message.MessageType.SYSTEM)
-                .content("안녕하세요 😊 요리 도우미입니다. 어떤 걸 도와드릴까요?")
-                .createdAt(LocalDateTime.now())
-                .build();
-        messageRepository.save(systemMsg);
-
-        return saved;
+        return sessionRepository.save(newSession);
+//        Session saved = sessionRepository.save(newSession);
+//
+//        // 시작 메시지 자동 생성
+//        Message systemMsg = Message.builder()
+//                .session(saved)
+//                .senderType(Message.SenderType.AI)
+//                .type(Message.MessageType.SYSTEM)
+//                .content("안녕하세요 😊 요리 도우미입니다. 어떤 걸 도와드릴까요?")
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//        messageRepository.save(systemMsg);
+//
+//        return saved;
     }
 
     //세션 제목 자동 생성 (첫 유저 메시지 후)
