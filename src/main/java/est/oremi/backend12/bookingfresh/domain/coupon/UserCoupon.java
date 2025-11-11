@@ -53,4 +53,12 @@ public class UserCoupon {
         }
         this.isUsed = isUsed;
     }
+
+    // 쿠폰 사용 적용
+    public void use(Long orderId) {
+        if (this.isUsed) {
+            throw new IllegalStateException("이미 사용한 쿠폰입니다.");
+        }
+        this.updateIsUsed(true);
+    }
 }

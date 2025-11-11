@@ -44,6 +44,7 @@ public class WebSecurityConfig {
                                         "/api/coupons",
                                         "/cart/add",
                                         "/api/coupons/cart/item/coupon",
+                                        "orders/create",
                                         "/api/coupons/consumer/*", // 사용자 쿠폰 조회
                                         "/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함
                                         // "/api/coupons/available/*/consumer/*", // 상품 적용 가능 쿠폰 조회, /api/coupons/available/{productId}/consumer/{consumerId}
