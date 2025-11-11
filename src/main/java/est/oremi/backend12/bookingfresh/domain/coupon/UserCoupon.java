@@ -37,4 +37,28 @@ public class UserCoupon {
         this.isUsed = false;
         this.isApplied = false;
     }
+
+    // 쿠폰 사용 상태 변경
+    public void updateIsApplied(boolean isApplied) {
+        if (this.isUsed) {
+            throw new IllegalStateException("이미 사용 완료된 쿠폰은 상태를 변경할 수 없습니다.");
+        }
+        this.isApplied = isApplied;
+    }
+
+    // 주문 확정 및 취소
+    public void updateIsUsed(boolean isUsed) {
+        if (isUsed) {
+            this.isApplied = false;
+        }
+        this.isUsed = isUsed;
+    }
+
+    // 쿠폰 사용 적용
+    public void use(Long orderId) {
+        if (this.isUsed) {
+            throw new IllegalStateException("이미 사용한 쿠폰입니다.");
+        }
+        this.updateIsUsed(true);
+    }
 }

@@ -2,10 +2,10 @@ package est.oremi.backend12.bookingfresh.domain.coupon.controller;
 
 import com.sun.security.auth.UserPrincipal;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponRegistrationRequest;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponResponse;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponResponse;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.*;
+import est.oremi.backend12.bookingfresh.domain.coupon.service.CartCouponService;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
+import est.oremi.backend12.bookingfresh.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +22,7 @@ import java.util.Map;
 public class CouponController {
 
     private final CouponService couponService;
+    private final CartCouponService cartCouponService;
 
     // 새로운 쿠폰을 등록하고 사용자에게 비동기 발급
     @PostMapping
@@ -46,6 +47,7 @@ public class CouponController {
         }
     }
 
+    // 쿠폰과 쿠폰이 적용 가능한 모든 카테고리 조회
     @GetMapping
     public ResponseEntity<List<CouponResponse>> getAllCoupons() {
         List<CouponResponse> response = couponService.findAllCouponsWithCategories();
@@ -53,9 +55,10 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
+    // 사용자가 소유하고 사용가능한 모든 쿠폰 조회
     @GetMapping("/consumer/{consumerId}")
     public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(@PathVariable Long consumerId) {
-        // 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다.
+        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다.
         if (consumerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -65,17 +68,63 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
+/*    // 상품에 사용 가능한, 사용자가 소유하고 있는 쿠폰 조회
     @GetMapping("/available/{productId}/consumer/{consumerId}")
     public ResponseEntity<List<UserCouponResponse>> getApplicableUserCoupons(
             @PathVariable Long productId,
             @PathVariable Long consumerId,
             @AuthenticationPrincipal UserPrincipal currentUser) {
-
         if (productId == null || consumerId == null) {
             return ResponseEntity.badRequest().build();
         }
         List<UserCouponResponse> response = couponService.findApplicableCouponsForUserAndProduct(consumerId, productId);
         // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록을 반환
+        // 여기서 response 정렬하고 가자.
         return ResponseEntity.ok(response);
+    }*/
+
+    // 사용자가 사용 가능한, 소유하고 있는, 할인금액을 반영한 쿠폰 리스트
+    @GetMapping("/available/{productId}/consumer/{consumerId}/prices")
+    // ⭐ 반환 타입을 UserCouponProductResponse 리스트로 변경합니다.
+    public ResponseEntity<List<UserCouponProductResponse>> getApplicableUserCouponsWithPrice(
+            @PathVariable Long productId,
+            @PathVariable Long consumerId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다. PathValuable 말고
+        if (productId == null || consumerId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        // ⭐ Service 호출은 그대로 유지 (매개변수가 consumerId, productId 2개로 통일됨)
+        List<UserCouponProductResponse> response = couponService.findApplicableCouponsForUserAndProductWithPrice(consumerId, productId);
+
+        // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록 (할인 금액 포함 및 정렬됨) 반환
+        return ResponseEntity.ok(response);
+    }
+
+    //장바구니 항목에 쿠폰을 예약/해제하고, isApplied 상태를 업데이트합니다.
+    @PatchMapping("/cart/item/coupon")
+    public ResponseEntity<String> toggleCartItemCoupon(
+            @RequestBody CouponCartItemRequest request,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        // ⭐ 임시 소비자 ID
+        Long consumerId = 1L;
+
+        try {
+            // CartCouponService 호출
+            cartCouponService.toggleCartItemCouponApplication(request, consumerId);
+
+            String action = (request.getUserCouponId() != null && request.getUserCouponId() > 0) ? "적용" : "해제";
+            return ResponseEntity.ok(request.getCartItemId() + "번 항목에 쿠폰이 성공적으로 " + action + "되었습니다.");
+
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException | SecurityException | IllegalArgumentException e) {
+            // 중복 사용, 사용 완료, 권한 없음, 상품 미적용 가능성 등의 오류
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("쿠폰 적용 중 오류 발생: " + e.getMessage());
+        }
     }
 }
