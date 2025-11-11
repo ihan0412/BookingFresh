@@ -20,7 +20,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Getter
 @Table(name = "order_items")
 public class OrderItem {
 
@@ -38,7 +37,7 @@ public class OrderItem {
   @JoinColumn(name = "product_id")
   private Product product;
 
-  // 쿠폰 상태 추척
+  // 쿠폰 사용 이후 쿠폰 취소시 재발급을 위한 추척
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_coupon_idx", nullable = true)
   private UserCoupon userCoupon;

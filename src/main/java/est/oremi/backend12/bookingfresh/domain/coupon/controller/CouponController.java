@@ -2,11 +2,10 @@ package est.oremi.backend12.bookingfresh.domain.coupon.controller;
 
 import com.sun.security.auth.UserPrincipal;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponRegistrationRequest;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.CouponResponse;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponProductResponse;
-import est.oremi.backend12.bookingfresh.domain.coupon.dto.UserCouponResponse;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.*;
+import est.oremi.backend12.bookingfresh.domain.coupon.service.CartCouponService;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
+import est.oremi.backend12.bookingfresh.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +22,7 @@ import java.util.Map;
 public class CouponController {
 
     private final CouponService couponService;
+    private final CartCouponService cartCouponService;
 
     // 새로운 쿠폰을 등록하고 사용자에게 비동기 발급
     @PostMapping
@@ -100,5 +100,31 @@ public class CouponController {
 
         // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록 (할인 금액 포함 및 정렬됨) 반환
         return ResponseEntity.ok(response);
+    }
+
+    //장바구니 항목에 쿠폰을 예약/해제하고, isApplied 상태를 업데이트합니다.
+    @PatchMapping("/cart/item/coupon")
+    public ResponseEntity<String> toggleCartItemCoupon(
+            @RequestBody CouponCartItemRequest request,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        // ⭐ 임시 소비자 ID
+        Long consumerId = 1L;
+
+        try {
+            // CartCouponService 호출
+            cartCouponService.toggleCartItemCouponApplication(request, consumerId);
+
+            String action = (request.getUserCouponId() != null && request.getUserCouponId() > 0) ? "적용" : "해제";
+            return ResponseEntity.ok(request.getCartItemId() + "번 항목에 쿠폰이 성공적으로 " + action + "되었습니다.");
+
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException | SecurityException | IllegalArgumentException e) {
+            // 중복 사용, 사용 완료, 권한 없음, 상품 미적용 가능성 등의 오류
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("쿠폰 적용 중 오류 발생: " + e.getMessage());
+        }
     }
 }

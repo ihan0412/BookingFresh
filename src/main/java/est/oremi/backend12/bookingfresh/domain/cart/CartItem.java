@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.cart;
 
 
+import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -44,6 +45,15 @@ public class CartItem {
 
   public void updateQuantity(int newQuantity) {
     this.quantity = newQuantity;
+  }
+
+  // 장바구니 상품 당 쿠폰
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_coupon_idx", nullable = true)
+  private UserCoupon userCoupon = null;
+
+  public void updateUserCoupon(UserCoupon userCoupon) {
+    this.userCoupon = userCoupon;
   }
 }
 

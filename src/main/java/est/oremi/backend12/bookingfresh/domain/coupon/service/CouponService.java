@@ -177,7 +177,6 @@ public class CouponService {
     }
 */
 
-
     // 쿠폰이 카테고리에 적용 가능한지 확인하는 도우미 메소드
     @Transactional(readOnly = true)
     protected boolean isCouponApplicableToCategory(Long couponId, Long categoryId) {
