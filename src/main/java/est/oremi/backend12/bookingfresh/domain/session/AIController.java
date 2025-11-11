@@ -119,4 +119,25 @@ public class AIController {
         return ResponseEntity.ok(responses);
     }
 
+    // 세션 내 시스템 추천상품 목록 조회
+    @GetMapping("/recommendations/{sessionId}")
+    public ResponseEntity<List<AiRecommendationResponse>> getRecommendationsBySession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Consumer user
+    ) {
+        // 세션 검증
+        Session session = aiSessionService.findByIdAndUser(sessionId, user);
+
+        // 추천 목록 조회
+        List<AiRecommendation> recommendations = aiRecommendationService.getRecommendationsBySession(session);
+
+        // DTO 변환
+        List<AiRecommendationResponse> responses = recommendations.stream()
+                .map(AiRecommendationResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(responses);
+    }
+
+
 }

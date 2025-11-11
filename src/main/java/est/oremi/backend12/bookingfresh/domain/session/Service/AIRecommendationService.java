@@ -74,4 +74,10 @@ public class AIRecommendationService {
             return Collections.emptyList();
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<AiRecommendation> getRecommendationsBySession(Session session) {
+        return recommendationRepository.findBySession(session);
+    }
+
 }
