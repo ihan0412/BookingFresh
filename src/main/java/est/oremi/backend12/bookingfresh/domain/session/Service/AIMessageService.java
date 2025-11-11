@@ -42,7 +42,7 @@ public class AIMessageService {
                 .toList();
     }
 
-
+    //유저 메시지, LLM 응답 및 SO 결과물 처리 및 저장
     @Transactional
     public AiMessageResponse handleUserMessage(Consumer user, AiMessageRequest req){
         Session session = sessionRepository.findById(req.getSessionId())
