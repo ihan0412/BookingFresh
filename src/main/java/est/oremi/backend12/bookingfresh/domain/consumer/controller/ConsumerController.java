@@ -3,6 +3,7 @@ package est.oremi.backend12.bookingfresh.domain.consumer.controller;
 import est.oremi.backend12.bookingfresh.config.jwt.JwtTokenProvider;
 import est.oremi.backend12.bookingfresh.domain.consumer.Service.ConsumerService;
 import est.oremi.backend12.bookingfresh.domain.consumer.dto.*;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.token.TokenService;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -130,5 +132,22 @@ public class ConsumerController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
                 .body("로그아웃 성공");
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<ConsumerResponse> updateConsumerInfo(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestBody ConsumerUpdateRequest request) {
+
+        //현재 로그인된 사용자의 ID 가져옴
+        // Long consumerId = customUserDetails.getId();
+        Long consumerId = 1L; // 일단 하드코딩으로 진행
+        // 서비스 메서드 호출
+        ConsumerResponse updatedConsumer = consumerService.updateConsumerInfo(
+                consumerId,
+                request
+        );
+
+        return ResponseEntity.ok(updatedConsumer);
     }
 }

@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.coupon.service;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
+import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.NewCouponRegisteredEvent;
