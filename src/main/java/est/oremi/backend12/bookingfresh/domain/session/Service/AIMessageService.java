@@ -74,6 +74,7 @@ public class AIMessageService {
                 .session(session)
                 .senderType(Message.SenderType.AI)
                 .type(Message.MessageType.ANSWER)
+                .intent(intent)
                 .content(aiRawText)
                 .structuredJson(structured.json())
                 .createdAt(LocalDateTime.now())
