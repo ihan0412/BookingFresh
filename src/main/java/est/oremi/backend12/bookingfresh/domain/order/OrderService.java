@@ -4,10 +4,20 @@ import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItem;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItemRepository;
 import est.oremi.backend12.bookingfresh.domain.cart.CartRepository;
+import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
+import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
+import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
+import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
+import est.oremi.backend12.bookingfresh.domain.product.Product;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +32,7 @@ public class OrderService {
 
   //주문 생성
   @Transactional
-  public Long createOrder(Long consumerId, LocalDateTime deliveryDateTime, boolean isReservation) {
+  public Long createOrder(Long consumerId, LocalDate deliveryDate, DeliverySlot deliverySlot, boolean isReservation) {
     Cart cart = cartRepository.findByConsumerId(consumerId)
         .orElseThrow(() -> new IllegalArgumentException("장바구니 없음"));
 
@@ -33,28 +43,72 @@ public class OrderService {
     Order order = new Order();
     order.setConsumer(cart.getConsumer());
     order.setCreatedAt(LocalDateTime.now());
-    order.setDeliveryDateTime(deliveryDateTime);
-    order.setIsReservation(isReservation);
     order.setStatus(Order.OrderStatus.PENDING);
+
+    if (isReservation) {
+      if (deliveryDate == null || deliverySlot == null) {
+        throw new IllegalArgumentException("예약 배송은 날짜와 시간대를 반드시 지정해야 합니다.");
+      }
+      order.setIsReservation(true);
+      order.setDeliveryDate(deliveryDate);
+      order.setDeliverySlot(deliverySlot);
+    } else {
+      order.setIsReservation(false);
+      order.setDeliveryDate(LocalDate.now().plusDays(1)); // 즉시 배송은 주문일 +1
+      order.setDeliverySlot(DeliverySlot.MORNING); // 기본 시간대는 오전
+    }
 
     BigDecimal totalPrice = BigDecimal.ZERO;
 
-    // 총액 계산 부분
-//    for (CartItem cartItem : cart.getItems()) {
-//      OrderItem orderItem = new OrderItem();
-//      orderItem.setOrder(order);
-//      orderItem.setProduct(cartItem.getProduct());
-//      orderItem.setQuantity(cartItem.getQuantity());
-//
-//      order.getOrderItems().add(orderItem);
-//
-//      BigDecimal itemTotal = cartItem.getProduct().getPrice()
-//          .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-//      totalPrice = totalPrice.add(itemTotal);
-//    }
+    // 주문 총액 변수 (쿠폰 적용 전/후)
+    BigDecimal totalOriginalPrice = BigDecimal.ZERO;
+    BigDecimal finalTotalCost = BigDecimal.ZERO;
+    List<UserCoupon> usedCoupons = new ArrayList<>();
 
-    order.setTotalPrice(totalPrice);
-    order.setFinal_cost(totalPrice); // 쿠폰 적용 전이므로 동일
+    // 총액 계산 및 OrderItem 생성 (쿠폰 적용)
+    for (CartItem cartItem : cart.getItems()) {
+      Product product = cartItem.getProduct();
+      int quantity = cartItem.getQuantity();
+      BigDecimal itemOriginalPrice = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+      BigDecimal itemDiscountAmount = BigDecimal.ZERO;
+
+      UserCoupon appliedCoupon = cartItem.getUserCoupon(); // CartItem에 연결된 예약 쿠폰 조회
+      // 쿠폰 적용 로직
+      if (appliedCoupon != null) {
+        // 유효성 검증
+        validateCouponForOrder(appliedCoupon, consumerId, product, itemOriginalPrice);
+        // 할인 금액 계산
+        itemDiscountAmount = calculateDiscountAmount(itemOriginalPrice, appliedCoupon.getCoupon());
+        usedCoupons.add(appliedCoupon);
+      }
+
+      // 최종 가격 및 총합 계산
+      BigDecimal itemFinalPrice = itemOriginalPrice.subtract(itemDiscountAmount);
+
+      totalOriginalPrice = totalOriginalPrice.add(itemOriginalPrice);
+      finalTotalCost = finalTotalCost.add(itemFinalPrice);
+
+      // OrderItem 생성 및 연관관계 설정
+      OrderItem orderItem = new OrderItem();
+      orderItem.setOrder(order);
+      orderItem.setProduct(product);
+      orderItem.setQuantity(quantity);
+      orderItem.setUserCoupon(appliedCoupon);
+
+      order.getOrderItems().add(orderItem);
+    }
+
+    // 주문 엔티티의 최종 금액 설정
+    order.setTotalPrice(totalOriginalPrice);
+    order.setFinal_cost(finalTotalCost);
+
+    orderRepository.save(order);
+
+    // 사용된 쿠폰 상태 최종 변경 (isUsed = true, isApplied = false)
+    for (UserCoupon uc : usedCoupons) {
+      // UserCoupon.use() 메서드 호출- isUsed=true, isApplied=false로 최종 사용 처리
+      uc.use(order.getId());
+    }
 
     orderRepository.save(order);
 
@@ -81,7 +135,75 @@ public class OrderService {
     if (order.getStatus() == Order.OrderStatus.CANCELLED) {
       throw new IllegalStateException("이미 취소된 주문입니다");
     }
+
+    // 쿠폰 상태 롤백
+    order.getOrderItems().stream()
+            .map(OrderItem::getUserCoupon)
+            .filter(userCoupon -> userCoupon != null && userCoupon.getIsUsed())
+            .forEach(userCoupon -> {
+              userCoupon.updateIsUsed(false); // isUsed=false, isApplied=false로 롤백
+            });
+
     order.setStatus(Order.OrderStatus.CANCELLED);
+  }
+
+  // 쿠폰 유효성 검사
+  private void validateCouponForOrder(
+          UserCoupon userCoupon,
+          Long consumerId,
+          Product product,
+          BigDecimal itemTotalPrice
+  ) {
+    // 소유자 확인
+    if (!userCoupon.getConsumer().getId().equals(consumerId)) {
+      throw new SecurityException("본인 소유의 쿠폰이 아닙니다.");
+    }
+
+    // 이미 사용 완료한 쿠폰
+    if (userCoupon.getIsUsed()) {
+      throw new IllegalStateException("이미 사용 완료된 쿠폰입니다.");
+    }
+
+    // 쿠폰 활성화 여부
+    if (!userCoupon.getCoupon().getIsActive()) {
+      throw new IllegalArgumentException("사용 불가능한 쿠폰입니다.");
+    }
+
+    // 최소 주문 금액 확인
+    BigDecimal minOrderAmount = new BigDecimal(userCoupon.getCoupon().getMinOrderAmount());
+    if (itemTotalPrice.compareTo(minOrderAmount) < 0) {
+      throw new IllegalArgumentException(
+              String.format("상품 '%s'의 금액(%s원)이 쿠폰 최소 주문 금액(%s원)보다 적습니다.",
+                      product.getName(), itemTotalPrice, minOrderAmount)
+      );
+    }
+  }
+  // 할인 금액 계산 처리- 소수점 이하는 버림
+  private BigDecimal calculateDiscountAmount(BigDecimal productPrice, Coupon coupon) {
+    try {
+      BigDecimal discountValue = new BigDecimal(coupon.getDiscountValue());
+      BigDecimal discountAmount = BigDecimal.ZERO;
+
+      // 100 초과면 가격 할인 (Fixed Amount), 100 이하면 퍼센트 할인
+      if (discountValue.compareTo(new BigDecimal("100")) > 0) {
+        discountAmount = discountValue;
+      } else {
+        // 퍼센트 할인 (Percentage)
+        BigDecimal percentage = discountValue.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+
+        // 소수점 이하는 버림
+        discountAmount = productPrice.multiply(percentage).setScale(0, RoundingMode.DOWN);
+      }
+
+      if (discountAmount.compareTo(productPrice) > 0) {
+        discountAmount = productPrice;
+      }
+
+      return discountAmount; // BigDecimal 반환
+    } catch (NumberFormatException e) {
+      System.err.println("Coupon ID " + coupon.getId() + " has invalid discountValue.");
+      return BigDecimal.ZERO;
+    }
   }
 }
 

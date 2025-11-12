@@ -3,7 +3,7 @@ package est.oremi.backend12.bookingfresh.domain.cart;
 import est.oremi.backend12.bookingfresh.domain.cart.dto.CartDto;
 import est.oremi.backend12.bookingfresh.domain.cart.dto.CartItemDto;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
+import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import est.oremi.backend12.bookingfresh.domain.product.ProductRepository;
 import jakarta.transaction.Transactional;

@@ -1,7 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.mail;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import est.oremi.backend12.bookingfresh.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
