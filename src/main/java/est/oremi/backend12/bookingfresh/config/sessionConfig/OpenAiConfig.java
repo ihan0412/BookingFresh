@@ -12,10 +12,18 @@ public class OpenAiConfig {
     @Value("${ai.openai.api-key}")
     private String apiKey;
 
+    @Value("${ai.openai.project-id:}")
+    private String projectId;
+
+    @Value("${ai.openai.org-id:}")
+    private String orgId;
+
     @Bean
     public OpenAIClient openAiClient() {
         return OpenAIOkHttpClient.builder()
                 .apiKey(apiKey)
+                .project(projectId)
+                .organization(orgId)
                 .build();
     }
 }
