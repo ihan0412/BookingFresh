@@ -3,8 +3,8 @@ package est.oremi.backend12.bookingfresh.domain.order;
 import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,13 +23,13 @@ public class OrderController {
 
   // 주문 생성
   @PostMapping("/create")
-  public ResponseEntity<Long> createOrder(
-      @RequestParam Long consumerId,
-      @RequestParam LocalDate deliveryDate,
-      @RequestParam DeliverySlot deliverySlot,
-      @RequestParam boolean isReservation) {
+  public ResponseEntity<OrderDto> createOrder(@RequestParam Long consumerId,
+      @RequestParam boolean isReservation,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
+      @RequestParam(required = false) DeliverySlot deliverySlot) {
     Long orderId = orderService.createOrder(consumerId, deliveryDate, deliverySlot, isReservation);
-    return ResponseEntity.ok(orderId);
+    OrderDto orderDto = orderService.getOrder(orderId);
+    return ResponseEntity.ok(orderDto);
   }
 
   // 주문 조회
