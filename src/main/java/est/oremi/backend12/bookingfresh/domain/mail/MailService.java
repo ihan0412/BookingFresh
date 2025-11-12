@@ -1,6 +1,5 @@
 package est.oremi.backend12.bookingfresh.domain.mail;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.order.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +8,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -20,44 +20,77 @@ public class MailService {
 
     //주문 확인 메일 발송
     @Async
-    public void sendOrderConfirmationMail(String email, String nickname, Long consumerId, Long orderId, LocalDateTime deliveryDateTime) {
+    public void sendOrderConfirmationMail(
+            String email,
+            String nickname,
+            Long consumerId,
+            Long orderId,
+            LocalDate deliveryDate,
+            Order.DeliverySlot deliverySlot
+    ) {
+        // 배송 시간대 문구 변환
+        String slotDesc = switch (deliverySlot) {
+            case DAWN -> "새벽 배송";
+            case MORNING -> "오전 배송";
+            case AFTERNOON -> "오후 배송";
+            case NIGHT -> "밤 배송";
+        };
+
         String title = "[BookingFresh] 주문이 접수되었습니다.";
         String content = String.format("""
-                안녕하세요, %s님!
+            안녕하세요, %s님!
 
-                주문이 정상적으로 접수되었습니다.
-                주문번호: %s
-                배송 예정일: %s
+            주문이 정상적으로 접수되었습니다. 😊
 
-                감사합니다.
-                """,
+            주문번호 : %s
+            배송 예정일 : %s (%s)
+
+            신선한 상품을 안전하게 배송해드리겠습니다.
+            감사합니다.
+
+            ────────────────
+            BookingFresh 드림
+            """,
                 nickname,
                 orderId,
-                deliveryDateTime.toLocalDate()
+                deliveryDate,
+                slotDesc
         );
 
-        // MailType.ORDER_CONFIRMATION 으로 메일 및 로그 처리
-        sendAndLog(email, consumerId, MailLog.MailType.ORDER_CONFIRMATION, title, content);
+        // MailType.ORDER_CONFIRMATION 으로 로그 처리
+        try {
+            sendAndLog(email, consumerId, MailLog.MailType.ORDER_CONFIRMATION, title, content);
+            log.info("[주문 확인 메일 발송 성공] consumerId={}, orderId={}", consumerId, orderId);
+        } catch (Exception e) {
+            log.error("[주문 확인 메일 발송 실패] consumerId={}, orderId={}", consumerId, orderId, e);
+        }
     }
 
     @Async
-    public void sendDeliveryReminderMail(String email, String nickname, Long consumerId, Long orderId, LocalDateTime deliveryDateTime) {
+    public void sendDeliveryReminderMail(
+            String email,
+            String nickname,
+            Long consumerId,
+            Long orderId,
+            LocalDate deliveryDate,
+            String deliverySlotDesc
+    ) {
         String title = "[BookingFresh] 내일 배송 예정 안내";
         String content = String.format("""
-                안녕하세요, %s님!
+            안녕하세요, %s님!
 
-                내일(%s) 배송이 예정되어 있습니다.
-                ( 주문번호: %s )
-                배송 일정에 참고 부탁드립니다.
+            내일(%s) %s이 예정되어 있습니다.
+            (주문번호: %s)
+            배송 일정을 참고 부탁드립니다.
 
-                감사합니다.
-                """,
+            감사합니다.
+            """,
                 nickname,
-                deliveryDateTime.toLocalDate(),
+                deliveryDate,
+                deliverySlotDesc,
                 orderId
         );
 
-        // MailType.DELIVERY_REMINDER 로 발송
         sendAndLog(email, consumerId, MailLog.MailType.DELIVERY_REMINDER, title, content);
     }
 
