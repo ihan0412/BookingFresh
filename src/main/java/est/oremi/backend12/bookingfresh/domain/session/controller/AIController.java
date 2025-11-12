@@ -1,4 +1,4 @@
-package est.oremi.backend12.bookingfresh.domain.session;
+package est.oremi.backend12.bookingfresh.domain.session.controller;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AIMessageService;
