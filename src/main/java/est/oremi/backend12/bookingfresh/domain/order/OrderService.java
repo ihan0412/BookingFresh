@@ -4,9 +4,11 @@ import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItem;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItemRepository;
 import est.oremi.backend12.bookingfresh.domain.cart.CartRepository;
+import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class OrderService {
 
   //주문 생성
   @Transactional
-  public Long createOrder(Long consumerId, LocalDateTime deliveryDateTime, boolean isReservation) {
+  public Long createOrder(Long consumerId, LocalDate deliveryDate, DeliverySlot deliverySlot, boolean isReservation) {
     Cart cart = cartRepository.findByConsumerId(consumerId)
         .orElseThrow(() -> new IllegalArgumentException("장바구니 없음"));
 
@@ -33,9 +35,20 @@ public class OrderService {
     Order order = new Order();
     order.setConsumer(cart.getConsumer());
     order.setCreatedAt(LocalDateTime.now());
-    order.setDeliveryDateTime(deliveryDateTime);
-    order.setIsReservation(isReservation);
     order.setStatus(Order.OrderStatus.PENDING);
+
+    if (isReservation) {
+      if (deliveryDate == null || deliverySlot == null) {
+        throw new IllegalArgumentException("예약 배송은 날짜와 시간대를 반드시 지정해야 합니다.");
+      }
+      order.setIsReservation(true);
+      order.setDeliveryDate(deliveryDate);
+      order.setDeliverySlot(deliverySlot);
+    } else {
+      order.setIsReservation(false);
+      order.setDeliveryDate(LocalDate.now().plusDays(1)); // 즉시 배송은 주문일 +1
+      order.setDeliverySlot(DeliverySlot.MORNING); // 기본 시간대는 오전
+    }
 
     BigDecimal totalPrice = BigDecimal.ZERO;
 
