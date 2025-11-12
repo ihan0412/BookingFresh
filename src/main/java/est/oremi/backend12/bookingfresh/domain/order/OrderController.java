@@ -1,6 +1,8 @@
 package est.oremi.backend12.bookingfresh.domain.order;
 
+import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,10 @@ public class OrderController {
   @PostMapping("/create")
   public ResponseEntity<Long> createOrder(
       @RequestParam Long consumerId,
-      @RequestParam LocalDateTime deliveryDateTime,
+      @RequestParam LocalDate deliveryDate,
+      @RequestParam DeliverySlot deliverySlot,
       @RequestParam boolean isReservation) {
-    Long orderId = orderService.createOrder(consumerId, deliveryDateTime, isReservation);
+    Long orderId = orderService.createOrder(consumerId, deliveryDate, deliverySlot, isReservation);
     return ResponseEntity.ok(orderId);
   }
 
