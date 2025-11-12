@@ -1,4 +1,4 @@
-package est.oremi.backend12.bookingfresh.domain.consumer;
+package est.oremi.backend12.bookingfresh.domain.consumer.repository;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import org.springframework.data.jpa.repository.JpaRepository;

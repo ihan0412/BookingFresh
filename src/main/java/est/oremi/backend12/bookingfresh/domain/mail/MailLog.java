@@ -19,9 +19,12 @@ public class MailLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idx;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consumer_idx", nullable = false)
-    private Consumer consumer;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "consumer_idx", nullable = false)
+//    private Consumer consumer;
+
+    // consumer 연관관계를 제거하고 ID로만 관리
+    private Long consumerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
