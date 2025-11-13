@@ -24,5 +24,11 @@ public class ProductService {
     return productRepository.findByCategoryId(categoryId, pageable)
         .map(ProductResponse::fromEntity);
   }
+
+  public Page<ProductResponse> searchProductsByName(String keyword, Pageable pageable) {
+    Page<Product> products = productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+
+    return products.map(ProductResponse::fromEntity);
+  }
 }
 
