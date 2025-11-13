@@ -65,9 +65,9 @@ public class AISessionService {
 //        return saved;
     }
 
-    //세션 제목 자동 생성 (첫 유저 메시지 후)
+    //세션의 첫 메시지 처리
     public void handlePostMessage(Session session, Message userMessage) {
-        // 세션의 첫 메시지일 경우에만
+        // 세션의 첫 메시지로 세션 제목 생성
         if (session.getMessages().size() == 1 || session.getTitle() == null) {
             String title = openAiService.generateTitleFromMessage(userMessage.getContent());
             session.setTitle(title);
