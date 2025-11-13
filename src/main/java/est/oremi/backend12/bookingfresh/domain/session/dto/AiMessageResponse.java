@@ -32,7 +32,7 @@ public class AiMessageResponse {
                     .messageId(message.getIdx())
                     .aiMessage(message.getContent())
                     .structuredJson(message.getStructuredJson())
-                    .responseType(message.getIntent() != null ? message.getIntent().name() : null)
+                    .responseType(message.getStructuredType() != null ? message.getStructuredType().name() : null)
                     .build();
         }
     }
