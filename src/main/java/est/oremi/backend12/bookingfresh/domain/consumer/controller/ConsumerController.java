@@ -16,12 +16,18 @@ import org.springframework.security.core.token.TokenService;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ConsumerController {
     private final ConsumerService consumerService;
     private final JwtTokenProvider jwtTokenProvider;
+/*
     @PostMapping("/signup")
     public ResponseEntity<ConsumerResponse> signup(@Valid @RequestBody AddConsumerRequest request,
                                                    BindingResult bindingResult) {
@@ -49,16 +55,56 @@ public class ConsumerController {
         }
 
     }
+*/
 
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@Valid @RequestBody AddConsumerRequest request,
+                                    BindingResult bindingResult) {
+
+        // DTO 유효성 검사 실패 시 필드별 에러 리스트 반환
+        if (bindingResult.hasErrors()) {
+            List<FieldErrorResponse> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("errors", errors);
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+
+        try {
+            ConsumerResponse response = consumerService.signUp(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (IllegalArgumentException e) {
+            // 비즈니스 로직 오류는 message로 반환
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(
+    public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequest request,
             BindingResult bindingResult,
             HttpServletResponse response) { // Refresh Token을 HttpOnly Cookie로 설정하기위한 HttpServletResponse
 
+        // 유효성 검사 실패 시 필드별 에러 반환
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            List<FieldErrorResponse> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> new FieldErrorResponse(error.getField(), error.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("errors", errors);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
 
         try {

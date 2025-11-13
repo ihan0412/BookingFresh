@@ -2,64 +2,258 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>회원가입</title>
+    <title>회원가입 - BOOKING SYSTEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- ✅ 변경: 카카오 주소 API 추가 -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <style>
-        /* 기본적인 스타일은 생략 */
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .error { color: red; font-size: 0.9em; }
-        label { display: block; margin-top: 10px; }
-        input[type="text"], input[type="password"] { width: 300px; padding: 5px; margin-top: 5px; }
-        button { margin-top: 20px; padding: 10px 15px; }
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 15px; /* ✅ 변경: 반응형 패딩 */
+            min-height: 100vh;
+            margin: 0;
+            overflow-y: auto; /* ✅ 추가: 세로 스크롤 허용 */
+        }
+        .signup-container {
+            width: 100%;
+            max-width: 500px; /* ✅ 변경: 550px → 500px */
+            padding: 25px; /* ✅ 변경: 30px → 25px */
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            margin: auto 0; /* ✅ 추가: 세로 중앙 정렬 */
+        }
+        /* ✅ 추가: 반응형 처리 */
+        @media (max-width: 576px) {
+            .signup-container {
+                padding: 20px;
+            }
+            .header-box {
+                font-size: 1.2rem !important;
+            }
+        }
+        /* ✅ 추가: 세로 반응형 (낮은 화면 높이) */
+        @media (max-height: 800px) {
+            body {
+                padding: 15px 15px;
+                align-items: flex-start;
+            }
+            .signup-container {
+                padding: 25px;
+            }
+            .text-center.mb-4 {
+                margin-bottom: 1rem !important;
+            }
+            .mb-3 {
+                margin-bottom: 0.75rem !important;
+            }
+            .mb-4 {
+                margin-bottom: 1rem !important;
+            }
+        }
+        /* ✅ 추가: 매우 낮은 화면 높이 */
+        @media (max-height: 600px) {
+            .signup-container {
+                padding: 20px;
+            }
+            .header-box {
+                padding: 10px 0;
+                margin: -20px -20px 15px -20px;
+            }
+            .form-control-lg {
+                padding: 0.5rem 1rem;
+                font-size: 1rem;
+            }
+            .btn-custom {
+                padding: 10px 0;
+                font-size: 1rem;
+            }
+        }
+        .header-box {
+            background-color: #00B992;
+            color: white;
+            padding: 12px 0; /* ✅ 변경: 15px → 12px */
+            margin: -25px -25px 20px -25px; /* ✅ 변경: 마진 조정 */
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            text-align: center;
+            font-size: 1.3rem; /* ✅ 변경: 1.5rem → 1.3rem */
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .form-control:focus {
+            border-color: #00B992;
+            box-shadow: 0 0 0 0.25rem rgba(0, 185, 146, 0.35);
+        }
+        /* ✅ 추가: 입력 필드 크기 조정 */
+        .form-control-lg {
+            padding: 0.6rem 1rem; /* ✅ Bootstrap 기본값보다 작게 */
+            font-size: 1rem; /* ✅ 기본 크기 */
+        }
+        .btn-custom {
+            background-color: #00B992;
+            color: white;
+            border: none;
+            padding: 10px 0; /* ✅ 변경: 12px → 10px */
+            font-size: 1rem; /* ✅ 변경: 1.1rem → 1rem */
+            transition: background-color 0.3s;
+        }
+        .btn-custom:hover {
+            background-color: #00897b;
+            color: white;
+        }
+        .btn-custom:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .feedback {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+            display: block;
+            min-height: 1.2em;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        /* ✅ 추가: 주소 검색 버튼 스타일 */
+        .btn-address-search {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-address-search:hover {
+            background-color: #5a6268;
+            color: white;
+        }
     </style>
 </head>
 <body>
-<h1>회원가입</h1>
 
-<form id="signupForm" th:object="${consumerRequest}">
+<div class="signup-container">
+    <div class="header-box">
+        회원가입
+    </div>
 
-    <label for="email">이메일:</label>
-    <input type="text" id="email" name="email" th:field="*{email}">
-    <span class="error" id="emailError"></span>
+    <div class="text-center mb-3"> <!-- ✅ 변경: mb-4 → mb-3 -->
+        <h2 style="font-weight: 900; color: #343a40; font-size: 1.6rem;">BOOKING<span style="color: #00B992;">FRESH</span></h2> <!-- ✅ 추가: font-size -->
+    </div>
 
-    <label for="password">비밀번호:</label>
-    <input type="password" id="password" name="password" th:field="*{password}">
-    <span class="error" id="passwordError"></span>
+    <form id="signupForm">
 
-    <label for="passwordConfirm">비밀번호 확인:</label>
-    <input type="password" id="passwordConfirm" name="passwordConfirm" th-field="*{passwordConfirm}">
-    <span class="error" id="passwordConfirmError"></span>
+        <div class="mb-2"> <!-- ✅ 변경: mb-3 → mb-2 -->
+            <label for="email" class="form-label fw-bold">아이디 (이메일)</label>
+            <input type="email" id="email" name="email" class="form-control form-control-lg" placeholder="example123@naver.com">
+            <div class="feedback" id="emailError"></div>
+        </div>
 
-    <label for="nickname">닉네임:</label>
-    <input type="text" id="nickname" name="nickname" th-field="*{nickname}">
-    <span class="error" id="nicknameError"></span>
+        <div class="row">
+            <div class="col-md-6 mb-2"> <!-- ✅ 변경: mb-3 → mb-2 -->
+                <label for="password" class="form-label fw-bold">비밀번호</label>
+                <input type="password" id="password" name="password" class="form-control form-control-lg">
+                <div class="feedback" id="passwordError"></div>
+            </div>
 
-    <label for="address">주소:</label>
-    <input type="text" id="address" name="address" th-field="*{address}">
-    <span class="error" id="addressError"></span>
+            <div class="col-md-6 mb-2"> <!-- ✅ 변경: mb-3 → mb-2 -->
+                <label for="passwordConfirm" class="form-label fw-bold">비밀번호 확인</label>
+                <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control form-control-lg">
+                <div class="feedback" id="passwordConfirmError"></div>
+            </div>
+        </div>
 
-    <label for="detailAddress">세부 주소:</label>
-    <input type="text" id="detailAddress" name="detailAddress" th-field="*{detailAddress}">
-    <span class="error" id="detailAddressError"></span>
+        <div class="mb-2"> <!-- ✅ 변경: mb-3 → mb-2 -->
+            <label for="nickname" class="form-label fw-bold">닉네임</label>
+            <input type="text" id="nickname" name="nickname" class="form-control form-control-lg" placeholder="부킹프레쉬">
+            <div class="feedback" id="nicknameError"></div>
+        </div>
 
-    <button type="submit">가입하기</button>
-</form>
+        <!-- ✅ 변경: 주소 검색 API 연동 -->
+        <div class="mb-2"> <!-- ✅ 변경: mb-3 → mb-2 -->
+            <label for="address" class="form-label fw-bold">도로명 주소</label>
+            <div class="input-group">
+                <input type="text" id="address" name="address" class="form-control form-control-lg" placeholder="주소 검색 버튼을 클릭하세요" readonly>
+                <button type="button" class="btn btn-address-search px-4" onclick="execDaumPostcode()">주소 검색</button>
+            </div>
+            <div class="feedback" id="addressError"></div>
+        </div>
 
-<div id="message" style="margin-top: 20px; color: blue;"></div>
+        <div class="mb-3"> <!-- ✅ 변경: mb-4 → mb-3 -->
+            <label for="detailAddress" class="form-label fw-bold">상세 주소</label>
+            <input type="text" id="detailAddress" name="detailAddress" class="form-control form-control-lg" placeholder="상세 주소를 입력하세요 (예: 101동 202호)">
+            <div class="feedback" id="detailAddressError"></div>
+        </div>
+
+        <button type="submit" class="btn btn-custom w-100 py-3">회원 가입 하기</button>
+    </form>
+
+    <div id="message" class="text-center mt-4 fw-bold" style="font-size: 1em;"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // ✅ 추가: 카카오 주소 검색 API 함수
+    function execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 도로명 주소 또는 지번 주소 선택
+                let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+
+                // 주소 정보를 입력 필드에 설정
+                document.getElementById('address').value = addr;
+
+                // 상세주소 입력 필드로 포커스 이동
+                document.getElementById('detailAddress').focus();
+            }
+        }).open();
+    }
+
+    // 모든 에러 메시지 및 스타일 초기화
+    function clearErrorMessages() {
+        document.querySelectorAll('.feedback').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        document.getElementById('message').textContent = '';
+    }
+
+    // 필드별 에러 표시
+    function displayFieldError(field, message) {
+        const errorElement = document.getElementById(field + 'Error');
+        const inputElement = document.querySelector(`[name="${field}"]`);
+
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+        if (inputElement) {
+            inputElement.classList.add('is-invalid');
+        }
+    }
+
     document.getElementById('signupForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // 폼 데이터를 JSON 객체로 변환
-        const formData = new FormData(this);
+        const form = this;
+        const messageDiv = document.getElementById('message');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        clearErrorMessages();
+
+        // 폼 데이터를 JSON으로 변환
+        const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => {
             data[key] = value;
         });
 
-        // 모든 에러 메시지 초기화
-        document.querySelectorAll('.error').forEach(el => el.textContent = '');
+        // 버튼 로딩 상태
+        submitBtn.disabled = true;
+        submitBtn.textContent = '가입 진행 중...';
 
+        // API 호출
         fetch('/api/signup', {
             method: 'POST',
             headers: {
@@ -68,41 +262,64 @@
             body: JSON.stringify(data),
         })
             .then(response => {
-                // 응답 본문을 JSON으로 파싱 시도
-                return response.json().then(json => {
-                    return {
-                        status: response.status,
-                        body: json
-                    };
-                }).catch(() => {
-                    // JSON 파싱 실패 시 (예: 응답이 빈 경우)
-                    return {
-                        status: response.status,
-                        body: null
-                    };
-                });
+                submitBtn.disabled = false;
+                submitBtn.textContent = '회원 가입 하기';
+
+                return response.json().then(json => ({
+                    status: response.status,
+                    body: json
+                })).catch(() => ({
+                    status: response.status,
+                    body: { message: '서버 응답 형식이 올바르지 않습니다.' }
+                }));
             })
             .then(({ status, body }) => {
-                const messageDiv = document.getElementById('message');
-
                 if (status === 201) {
-                    messageDiv.textContent = '회원가입 성공! (ID: ' + body.id + ')';
-                    messageDiv.style.color = 'green';
+                    // 회원가입 성공
+                    alert('🎉 회원가입 성공! 로그인 페이지로 이동합니다.');
+                    window.location.href = '/view/login';
+
                 } else if (status === 400) {
-                    // DTO 유효성 검사 실패 또는 Service 비즈니스 로직 오류 처리
-                    const errorMsg = body && body.message ? body.message : '유효성 검사에 실패했습니다.';
-                    messageDiv.textContent = '가입 실패: ' + errorMsg;
-                    messageDiv.style.color = 'red';
+                    // 백엔드 유효성 검사 오류 (필드별 에러)
+                    if (body.errors && Array.isArray(body.errors)) {
+                        body.errors.forEach(error => {
+                            displayFieldError(error.field, error.message);
+                        });
+                        messageDiv.textContent = '❌ 입력 정보를 확인해주세요.';
+                        messageDiv.style.color = '#dc3545';
+                    }
+                    // 비즈니스 로직 오류 (중복 이메일, 비밀번호 불일치 등)
+                    else if (body.message) {
+                        const errorMsg = body.message;
+
+                        if (errorMsg.includes("비밀번호와 비밀번호 확인이 일치하지 않습니다")) {
+                            displayFieldError('passwordConfirm', errorMsg);
+                        } else if (errorMsg.includes("이미 사용 중인 이메일")) {
+                            displayFieldError('email', errorMsg);
+                        } else if (errorMsg.includes("이미 사용 중인 닉네임")) {
+                            displayFieldError('nickname', errorMsg);
+                        } else {
+                            messageDiv.textContent = '❌ ' + errorMsg;
+                            messageDiv.style.color = '#dc3545';
+                        }
+                    }
+
                 } else {
-                    messageDiv.textContent = '알 수 없는 오류가 발생했습니다.';
-                    messageDiv.style.color = 'red';
+                    // 500 등 기타 서버 오류
+                    messageDiv.textContent = '❌ 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    messageDiv.style.color = '#dc3545';
                 }
             })
             .catch(error => {
-                document.getElementById('message').textContent = '네트워크 오류가 발생했습니다.';
-                document.getElementById('message').style.color = 'red';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '회원 가입 하기';
+
+                console.error('Network Error:', error);
+                messageDiv.textContent = '🌐 네트워크 연결 오류가 발생했습니다.';
+                messageDiv.style.color = '#dc3545';
             });
     });
 </script>
+
 </body>
 </html>

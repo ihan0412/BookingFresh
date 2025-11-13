@@ -2,35 +2,163 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
+    <title>로그인 - BOOKING SYSTEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        .header-box {
+            background-color: #00B992;
+            color: white;
+            padding: 15px 0;
+            margin: -40px -40px 30px -40px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .form-control:focus {
+            border-color: #00B992;
+            box-shadow: 0 0 0 0.25rem rgba(0, 185, 146, 0.35);
+        }
+        .btn-custom {
+            background-color: #00B992;
+            color: white;
+            border: none;
+            padding: 12px 0;
+            font-size: 1.1rem;
+            transition: background-color 0.3s;
+        }
+        .btn-custom:hover {
+            background-color: #00897b;
+            color: white;
+        }
+        .btn-custom:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .feedback {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+            display: block;
+            min-height: 1.2em;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+        .signup-link a {
+            color: #00B992;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<h1>로그인</h1>
 
-<form id="loginForm" th:object="${loginRequest}">
+<div class="login-container">
+    <div class="header-box">
+        로그인
+    </div>
 
-    <label for="email">이메일:</label>
-    <input type="text" id="email" name="email" th:field="*{email}">
+    <div class="text-center mb-4">
+        <h2 style="font-weight: 900; color: #343a40;">BOOKING<span style="color: #00B992;">FRESH</span></h2>
+    </div>
 
-    <label for="password">비밀번호:</label>
-    <input type="password" id="password" name="password" th-field="*{password}">
+    <form id="loginForm">
 
-    <button type="submit">로그인</button>
-</form>
+        <div class="mb-3">
+            <label for="email" class="form-label fw-bold">아이디 (이메일)</label>
+            <input type="email" id="email" name="email" class="form-control form-control-lg" placeholder="example123@naver.com">
+            <div class="feedback" id="emailError"></div>
+        </div>
 
-<div id="message" style="margin-top: 20px; color: red;"></div>
+        <div class="mb-4">
+            <label for="password" class="form-label fw-bold">비밀번호</label>
+            <input type="password" id="password" name="password" class="form-control form-control-lg">
+            <div class="feedback" id="passwordError"></div>
+        </div>
+
+        <button type="submit" class="btn btn-custom w-100 py-3">로그인</button>
+    </form>
+
+    <div id="message" class="text-center mt-4 fw-bold" style="font-size: 1em;"></div>
+
+    <div class="signup-link">
+        아직 회원이 아니신가요? <a href="/signup">회원가입</a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // 모든 에러 메시지 및 스타일 초기화
+    function clearErrorMessages() {
+        document.querySelectorAll('.feedback').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        document.getElementById('message').textContent = '';
+    }
+
+    // 필드별 에러 표시
+    function displayFieldError(field, message) {
+        const errorElement = document.getElementById(field + 'Error');
+        const inputElement = document.querySelector(`[name="${field}"]`);
+
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+        if (inputElement) {
+            inputElement.classList.add('is-invalid');
+        }
+    }
+
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const formData = new FormData(this);
+        const form = this;
+        const messageDiv = document.getElementById('message');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        clearErrorMessages();
+
+        // 폼 데이터를 JSON으로 변환
+        const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => {
             data[key] = value;
         });
 
-        fetch('/api/login', { // ⭐ 로그인 API 경로
+        // 버튼 로딩 상태
+        submitBtn.disabled = true;
+        submitBtn.textContent = '로그인 중...';
+
+        // API 호출
+        fetch('/api/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -38,34 +166,67 @@
             body: JSON.stringify(data),
         })
             .then(response => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '로그인';
+
+                // Refresh Token 쿠키 확인 (디버깅용)
                 const cookieHeader = response.headers.get('Set-Cookie');
                 if (cookieHeader) {
-                    // Refresh Token이 HttpOnly 쿠키에 저장됨
                     console.log('Refresh Token Cookie Set:', cookieHeader);
                 }
-                return response.json();
+
+                return response.json().then(json => ({
+                    status: response.status,
+                    body: json
+                })).catch(() => ({
+                    status: response.status,
+                    body: { message: '서버 응답 형식이 올바르지 않습니다.' }
+                }));
             })
-            .then(json => {
-                const messageDiv = document.getElementById('message');
-                if (json.accessToken) {
-                    // 1. Access Token을 Local Storage 또는 Session Storage에 저장
-                    localStorage.setItem('accessToken', json.accessToken);
+            .then(({ status, body }) => {
+                if (status === 200 && body.accessToken) {
+                    // 로그인 성공
+                    localStorage.setItem('accessToken', body.accessToken);
 
-                    messageDiv.textContent = '로그인 성공! Access Token 저장됨.';
-                    messageDiv.style.color = 'green';
+                    alert('🎉 로그인 성공! 메인 페이지로 이동합니다.');
+                    window.location.href = '/home'; // 메인 페이지 경로로 변경
 
-                    // 2. 로그인 후 이동 (예: 홈 페이지)
-                    // window.location.href = '/home';
+                } else if (status === 400) {
+                    // 백엔드 유효성 검사 오류 (필드별 에러)
+                    if (body.errors && Array.isArray(body.errors)) {
+                        body.errors.forEach(error => {
+                            displayFieldError(error.field, error.message);
+                        });
+                        messageDiv.textContent = '❌ 입력 정보를 확인해주세요.';
+                        messageDiv.style.color = '#dc3545';
+                    }
+                    // 단일 메시지 오류
+                    else if (body.message) {
+                        messageDiv.textContent = '❌ ' + body.message;
+                        messageDiv.style.color = '#dc3545';
+                    }
+
+                } else if (status === 401) {
+                    // 인증 실패 (이메일 또는 비밀번호 불일치)
+                    messageDiv.textContent = '❌ 이메일 또는 비밀번호가 일치하지 않습니다.';
+                    messageDiv.style.color = '#dc3545';
+
                 } else {
-                    messageDiv.textContent = json.message || '로그인 실패: 이메일 또는 비밀번호 불일치.';
-                    messageDiv.style.color = 'red';
+                    // 500 등 기타 서버 오류
+                    messageDiv.textContent = '❌ 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    messageDiv.style.color = '#dc3545';
                 }
             })
             .catch(error => {
-                document.getElementById('message').textContent = '네트워크 오류가 발생했습니다.';
-                document.getElementById('message').style.color = 'red';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '로그인';
+
+                console.error('Network Error:', error);
+                messageDiv.textContent = '🌐 네트워크 연결 오류가 발생했습니다.';
+                messageDiv.style.color = '#dc3545';
             });
     });
 </script>
+
 </body>
 </html>
