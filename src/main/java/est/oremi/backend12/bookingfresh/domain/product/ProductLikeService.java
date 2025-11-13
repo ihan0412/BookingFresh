@@ -1,6 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.product;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.ConsumerRepository;
+import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;

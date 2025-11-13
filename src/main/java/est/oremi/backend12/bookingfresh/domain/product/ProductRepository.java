@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
   Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
+  Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Product> findByKeyword(@Param("keyword") String keyword);
