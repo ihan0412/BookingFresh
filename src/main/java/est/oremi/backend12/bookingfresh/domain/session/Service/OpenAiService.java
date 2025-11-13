@@ -23,9 +23,9 @@ public class OpenAiService {
 
     private final OpenAIClient openAiClient;
 
-    public AiResponseData formatAlanResponse(Message.IntentType purpose, String aiRawText) {
+    public AiResponseData formatAlanResponse(Message.IntentType intent, String aiRawText) {
 
-        return switch (purpose) {
+        return switch (intent) {
             case RECIPE_ASSISTANT -> parseRecipe(aiRawText);
             case COOKING_IDEA -> parseSuggestion(aiRawText);
             default -> new AiResponseData("TEXT", null, aiRawText);

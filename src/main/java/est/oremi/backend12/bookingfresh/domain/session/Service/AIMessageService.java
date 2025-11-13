@@ -53,7 +53,7 @@ public class AIMessageService {
         Message userMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.USER)
-                .type(Message.MessageType.QUESTION)
+//                .type(Message.MessageType.QUESTION)
                 .intent(intent)
                 .content(req.getContent())
                 .createdAt(LocalDateTime.now())
@@ -69,10 +69,10 @@ public class AIMessageService {
         Message aiMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.AI)
-                .type(Message.MessageType.ANSWER)
                 .intent(intent)
                 .content(aiRawText)
                 .structuredJson(structured.json())
+                .structuredType(Message.StructuredType.valueOf(structured.type()))
                 .createdAt(LocalDateTime.now())
                 .build());
 
@@ -90,6 +90,7 @@ public class AIMessageService {
                 .userMessage(userMsg.getContent())
                 .aiMessage(aiMsg.getContent())
                 .structuredJson(aiMsg.getStructuredJson())
+                .intentType(userMsg.getIntent().name())
                 .responseType(structured.type())
                 .build();
     }

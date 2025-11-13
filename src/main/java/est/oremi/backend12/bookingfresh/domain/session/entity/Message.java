@@ -36,7 +36,7 @@ public class Message {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private MessageType type;
+    private StructuredType structuredType;
 
     private LocalDateTime createdAt;
 
@@ -53,7 +53,7 @@ public class Message {
     public enum IntentType{
         RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT
     }
-    public enum MessageType{
-        QUESTION, ANSWER, SYSTEM
+    public enum StructuredType {
+        RECIPE, SUGGESTION, TEXT
     }
 }

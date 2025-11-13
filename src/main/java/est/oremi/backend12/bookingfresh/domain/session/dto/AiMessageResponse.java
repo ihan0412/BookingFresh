@@ -12,7 +12,8 @@ public class AiMessageResponse {
     private String userMessage;
     private String aiMessage;
     private String structuredJson; // 구조화된 응답
-    private String responseType;
+    private String intentType;      // RECIPE_ASSISTANT / SHOPPING_ASSISTANT / ...
+    private String responseType;    // STRUCTURED 결과 타입: RECIPE / SHOPPING / TEXT
 
     public static AiMessageResponse from(Message message) {
         // USER → userMessage, AI → aiMessage 로 구분
@@ -21,8 +22,9 @@ public class AiMessageResponse {
                     .sessionId(message.getSession().getIdx())
                     .messageId(message.getIdx())
                     .userMessage(message.getContent())
-                    .structuredJson(message.getStructuredJson())
-                    .responseType(message.getType() != null ? message.getType().name() : null)
+                    .intentType(message.getIntent() != null ? message.getIntent().name() : null)
+//                    .structuredJson(message.getStructuredJson())
+//                    .responseType(message.getType() != null ? message.getType().name() : null)
                     .build();
         } else {
             return AiMessageResponse.builder()
