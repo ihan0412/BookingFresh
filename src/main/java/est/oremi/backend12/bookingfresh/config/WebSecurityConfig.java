@@ -35,21 +35,25 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->   // 인증, 인가 설정
                         auth
                                 .requestMatchers(
+                                        // 페이지 요청
                                         "/signup",
                                         "/login",
                                         "/home",
+                                        // api 요청
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
-                                        "/api/auth/refresh",        // 토큰 재발급 처리
-                                        "/api/auth/logout",
-                                        "/api/coupons",
-                                        "/cart/add",
-                                        "/api/coupons/cart/item/coupon",
-                                        "/orders/create",
-                                        "/api/me", // 개인정보 수정
-                                        "/api/coupons/consumer/*", // 사용자 쿠폰 조회
-                                        "/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함
+
+                                        "/api/login",     // POST /api/login (로그인 처리)
+                                        "/api/auth/refresh" // 토큰 재발급 처리
+                                        //"/api/auth/logout",
+                                        //"/api/coupons",
+                                        //"/cart/add",
+                                        //"/api/coupons/cart/item/coupon",
+                                        //"/orders/create",
+                                        // "/api/me", // 개인정보 수정
+                                        //"/api/coupons/consumer/*", // 사용자 쿠폰 조회
+                                        //"/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함
                                         // "/api/coupons/available/*/consumer/*", // 상품 적용 가능 쿠폰 조회, /api/coupons/available/{productId}/consumer/{consumerId}
-                                        "/api/login"     // POST /api/login (로그인 처리)
+
                                 ).permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                                 .anyRequest().authenticated()
