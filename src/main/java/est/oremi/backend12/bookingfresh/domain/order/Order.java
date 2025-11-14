@@ -2,6 +2,7 @@ package est.oremi.backend12.bookingfresh.domain.order;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -21,6 +22,12 @@ public class Order {
         COMPLETED,
         CANCELLED
     }
+    public enum DeliverySlot {
+        DAWN,   // 새벽
+        MORNING, // 오전
+        AFTERNOON, // 오후
+        NIGHT   // 밤
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +43,10 @@ public class Order {
 
     private Boolean isReservation;
 
-    private LocalDateTime deliveryDateTime;
+    private LocalDate deliveryDate;
+
+    @Enumerated(EnumType.STRING)
+    private DeliverySlot deliverySlot;
 
     private LocalDateTime createdAt;
 

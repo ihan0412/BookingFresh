@@ -1,7 +1,9 @@
 package est.oremi.backend12.bookingfresh.domain.order.dto;
 
 import est.oremi.backend12.bookingfresh.domain.order.Order;
+import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -16,7 +18,8 @@ public class OrderDto {
   private BigDecimal finalCost;            // 최종 결제 금액 (할인/쿠폰 적용 후)
   private String status;                   // 주문 상태 (PENDING, COMPLETED, CANCELLED)
   private Boolean isReservation;           // 예약 주문 여부
-  private LocalDateTime deliveryDateTime;  // 배송 예정 시간
+  private LocalDate deliveryDate;           // 배송 날짜
+  private DeliverySlot deliverySlot;        // 배송 시간대
   private LocalDateTime createdAt;         // 주문 생성 시간
   private Long consumerId;                 // 주문자 ID
   private String consumerName;             // 주문자 이름
@@ -38,7 +41,8 @@ public class OrderDto {
         order.getFinal_cost(),
         order.getStatus().name(),
         order.getIsReservation(),
-        order.getDeliveryDateTime(),
+        order.getDeliveryDate(),
+        order.getDeliverySlot(),
         order.getCreatedAt(),
         order.getConsumer().getId(),
         order.getConsumer().getNickname(),

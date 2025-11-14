@@ -11,10 +11,12 @@ import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.Recipe
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.SuggestionSchema;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OpenAiService {
@@ -53,7 +55,7 @@ public class OpenAiService {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("[OpenAiService] parseRecipe() failed: {}", e.getMessage(), e);
             return new AiResponseData("RECIPE", null, rawText);
         }
     }
@@ -81,7 +83,7 @@ public class OpenAiService {
             return new AiResponseData("SUGGESTION", json, rawText);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("[OpenAiService] parseSuggestion() failed: {}", e.getMessage(), e);
             return new AiResponseData("SUGGESTION", null, rawText);
         }
     }
@@ -91,19 +93,48 @@ public class OpenAiService {
             //프롬프트 구성
             String prompt = """
             다음 문장의 의도를 분류하세요.
+           \s
+                    예시:
+                    입력: 감자조림 만드는 법 알려줘
+                    출력: RECIPE_ASSISTANT
+                   \s
+                    입력: 오늘 뭐 먹을지 추천해줘
+                    출력: COOKING_IDEA
+                   \s
+                    입력: 안녕
+                    출력: GENERAL_CHAT
 
             문장: %s
-            """.formatted(userMessage);
+           \s""".formatted(userMessage);
 
             // 요청 파라미터 생성
             ChatCompletionSystemMessageParam systemMsg =
                     ChatCompletionSystemMessageParam.builder()
                             .content("""
-                        너는 사용자의 요청을 분석해 의도를 분류하는 AI이다.
-                        반드시 아래 ENUM 이름 중 하나만 출력해야 한다:
-                        RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT.
-                        그 외 설명이나 문장은 절대 출력 금지.
-                        """)
+                                    너는 사용자의 메시지를 분석하여 'AI 요리 도우미'가 어떤 형태의 응답을 생성할지 예측하고,
+                                                그에 따라 아래 세 가지 의도 중 하나로 분류하는 분류기이다.
+                                   \s
+                                                각 의도는 다음 기준을 따른다:
+                                   \s
+                                                1. RECIPE_ASSISTANT:
+                                                    - 사용자가 구체적인 요리 방법, 레시피, 재료 구성, 조리 순서를 알고자 하는 경우
+                                                    - 예: "된장찌개 만드는 법 알려줘", "닭가슴살로 요리 추천해줘", "감자조림 레시피 알려줘"
+                                                    - 앨런이 응답으로 **식재료 목록과 조리 순서**를 포함할 가능성이 높음
+                                   \s
+                                                2. COOKING_IDEA:
+                                                    - 사용자가 요리 아이디어나 메뉴 제안, 식사 영감, 추천 요리를 묻는 경우
+                                                    - 예: "오늘 저녁 뭐 먹을까?", "다이어트 식단 아이디어 있어?", "집에 당근이 있는데 뭐 만들까?"
+                                                    - 앨런이 응답으로 **메뉴나 요리 아이디어, 조합 제안**을 줄 가능성이 높음
+                                   \s
+                                                3. GENERAL_CHAT:
+                                                    - 요리와 직접 관련 없는 일반 대화, 혹은 잡담, 인사, 기타 정보 요청
+                                                    - 예: "안녕", "오늘 날씨 어때?", "요리 말고 추천할만한 영화 있어?"
+                                   \s
+                                                반드시 아래 ENUM 이름 중 하나만 정확히 출력해야 한다:
+                                                RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT
+                                   \s
+                                                설명, 이유, 기타 문장은 절대 출력하지 마라.
+                       \s""")
                             .build();
 
             ChatCompletionUserMessageParam userMsg =
@@ -112,7 +143,7 @@ public class OpenAiService {
                             .build();
 
             ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                    .model("gpt-4o-mini")
+                    .model(ChatModel.GPT_4O_MINI)
                     .messages(List.of(
                             ChatCompletionMessageParam.ofSystem(systemMsg),
                             ChatCompletionMessageParam.ofUser(userMsg)
@@ -125,12 +156,20 @@ public class OpenAiService {
             ChatCompletion completion = openAiClient.chat().completions().create(params);
 
             // 응답에서 텍스트 추출
-            String intentName = completion.choices().get(0).message().content().orElse("")
-                    .trim();
+            String intentName = completion.choices().get(0).message().content()
+                    .orElse("")
+                    .trim()
+                    .toUpperCase();
+
+            if (!List.of("RECIPE_ASSISTANT", "COOKING_IDEA", "GENERAL_CHAT").contains(intentName)) {
+                intentName = "GENERAL_CHAT";
+            }
 
             // Enum 매핑
             return Message.IntentType.valueOf(intentName.toUpperCase());
         } catch (Exception e) {
+            log.warn("[OpenAiService] getIntentFromMessage() failed for input='{}': {}",
+                    userMessage, e.getMessage());
             return Message.IntentType.GENERAL_CHAT;
         }
     }
@@ -169,7 +208,7 @@ public class OpenAiService {
 
             // 요청 생성
             ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                    .model("gpt-4o-mini")
+                    .model(ChatModel.GPT_4O_MINI)
                     .messages(List.of(
                             ChatCompletionMessageParam.ofSystem(systemMsg),
                             ChatCompletionMessageParam.ofUser(userMsg)
@@ -198,6 +237,8 @@ public class OpenAiService {
 
         } catch (Exception e) {
             // 실패 시 기본 제목 반환
+            log.warn("[OpenAiService] generateTitleFromMessage() failed for '{}': {}",
+                    userMessage, e.getMessage());
             return "새 AI 대화";
         }
     }

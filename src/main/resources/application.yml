@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
 
   mail:
@@ -29,4 +29,5 @@ ai:
     client-id: ${ALAN_CLIENT_ID}
   openai:
     api-key: ${OPENAI_API_KEY}
-    model: ${OPENAI_MODEL}
+    project-id: ${OPENAI_PROJECT_ID}
+    org-id: ${OPENAI_ORG_ID}
