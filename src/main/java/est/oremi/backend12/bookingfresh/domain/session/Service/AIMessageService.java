@@ -7,6 +7,7 @@ import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageResponse;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiResponseData;
+import est.oremi.backend12.bookingfresh.domain.session.repository.AiRecommendationRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.List;
 public class AIMessageService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
+    private final AiRecommendationRepository recommendationRepository;
     private final AlanApiClient alanApiClient;     // 앨런 API 호출용
     private final OpenAiService openAiService;
     private final AISessionService aiSessionService;
@@ -38,7 +40,13 @@ public class AIMessageService {
         List<Message> messages = messageRepository.findBySessionOrderByCreatedAtAsc(session);
 
         return messages.stream()
-                .map(AiMessageResponse::from)
+                .map(m -> {
+                    // ⭐ 메시지에 대해 추천 존재 여부 조회
+                    boolean hasRecommendation = recommendationRepository.existsByMessage(m);
+
+                    // ⭐ 수정된 from() 시그니처대로 전달
+                    return AiMessageResponse.from(m, hasRecommendation);
+                })
                 .toList();
     }
 
@@ -92,6 +100,7 @@ public class AIMessageService {
                 .structuredJson(aiMsg.getStructuredJson())
                 .intentType(userMsg.getIntent().name())
                 .responseType(structured.type())
+                .hasRecommendation(false)
                 .build();
     }
 

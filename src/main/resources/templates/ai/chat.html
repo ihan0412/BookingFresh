@@ -295,12 +295,15 @@
         } else if (msg.senderType === "AI") {
             appendAIMarkdown(msg.aiMessage);
 
-            if (msg.intentType === "RECIPE_ASSISTANT") {
+            // 실시간 추천 요청 버튼
+            if (msg.responseType === "RECIPE" && !msg.hasRecommendation) {
                 appendRecommendChoice(msg);
             }
-            // if (msg.responseType !== "TEXT" && msg.structuredJson) {
-            //     appendStructuredCard(JSON.parse(msg.structuredJson));
-            // }
+
+            // 재입장 시 추천 보기 버튼
+            if (msg.hasRecommendation) {
+                appendRecommendationViewButton(msg);
+            }
         }
     }
 
@@ -351,7 +354,7 @@
         }
     }
 
-    //추천 선택 박스 생성 함수
+    // 추천 선택 박스 생성 함수
     function appendRecommendChoice(message) {
         const chatBody = document.getElementById("chatBody");
 
@@ -406,6 +409,70 @@
             block.innerHTML = `<span class="text-danger">추천 중 오류가 발생했습니다.</span>`;
         }
     }
+
+    // 세션 재입장 시 추천 상품 정보
+    function appendRecommendationViewButton(msg) {
+        const chatBody = document.getElementById("chatBody");
+
+        const block = document.createElement("div");
+        block.classList.add("p-3", "my-2");
+
+        block.innerHTML = `
+        <button class="btn btn-outline-success btn-sm"
+                onclick="loadRecommendationsForMessage(${msg.messageId})">
+            관련 상품 추천 다시 보기
+        </button>
+    `;
+
+        chatBody.appendChild(block);
+    }
+
+    //"추천 보기" 버튼 클릭 시 로더
+    async function loadRecommendationsForMessage(messageId) {
+        try {
+            const res = await fetch(`/api/ai/recommendations/${currentSessionId}`);
+            if (!res.ok) {
+                alert("추천 목록을 가져오지 못했습니다.");
+                return;
+            }
+
+            const recommendations = await res.json();
+
+            const targetId = Number(messageId);
+            const items = recommendations.filter(r => Number(r.messageId) === targetId);
+
+            if (items.length === 0) {
+                alert("해당 메시지에 대한 추천 내역이 없습니다.");
+                return;
+            }
+
+            const chatBody = document.getElementById("chatBody");
+
+            /** 1) 기존 동일 messageId 카드가 있다면 제거 */
+            document
+                .querySelectorAll(`.recommend-card-wrapper[data-mid="${targetId}"]`)
+                .forEach(el => el.remove());
+
+            /** 2) 카드 wrapper 생성 */
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("recommend-card-wrapper", "p-2", "mt-2");
+            wrapper.dataset.mid = targetId;  // messageId 저장 (중복 렌더링 방지)
+
+            /** 3) 카드 HTML 삽입 */
+            wrapper.innerHTML = renderRecommendationCards(items);
+
+            /** 4) 채팅창에 append */
+            chatBody.appendChild(wrapper);
+
+            /** 5) 스크롤을 맨 아래로 */
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+        } catch (err) {
+            console.error("추천 조회 오류:", err);
+            alert("추천 상품을 불러오는 중 오류가 발생했습니다.");
+        }
+    }
+
 
     //상품 카드 렌더링
     function renderRecommendationCards(items) {
