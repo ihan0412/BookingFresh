@@ -28,7 +28,7 @@ public class AIRecommendationService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public List<AiRecommendation> generateRecommendations(Session session, Message userMsg, AiResponseData aiResponse) {
+    public List<AiRecommendation> generateRecommendations(Session session, Message aiMsg, AiResponseData aiResponse) {
         try {
             // ① AI 응답 JSON에서 RecipeSchema 역직렬화
             if (aiResponse.json() == null || aiResponse.json().isBlank())
@@ -58,7 +58,7 @@ public class AIRecommendationService {
             List<AiRecommendation> recommendations = matchedProducts.stream()
                     .map(p -> AiRecommendation.builder()
                             .session(session)
-                            .message(userMsg)
+                            .message(aiMsg)
                             .productId(p.getId())
                             .productName(p.getName())
                             .price(p.getPrice())

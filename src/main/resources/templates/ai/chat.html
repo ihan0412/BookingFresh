@@ -259,7 +259,7 @@
     }
 
     /** ------------------------------
-     *  AI markdown 블록 렌더링
+     *  앨런 AI 응답 markdown 블록 렌더링
      * ------------------------------*/
     function appendAIMarkdown(raw) {
         const chatBody = document.getElementById("chatBody");
@@ -295,6 +295,9 @@
         } else if (msg.senderType === "AI") {
             appendAIMarkdown(msg.aiMessage);
 
+            if (msg.intentType === "RECIPE_ASSISTANT") {
+                appendRecommendChoice(msg);
+            }
             // if (msg.responseType !== "TEXT" && msg.structuredJson) {
             //     appendStructuredCard(JSON.parse(msg.structuredJson));
             // }
@@ -336,11 +339,103 @@
             // AI 응답은 aiMessage(JSON 문자열) or content로 처리
             appendAIMarkdown(data.aiMessage);
 
+            if(data.responseType ==="RECIPE")
+                appendRecommendChoice(data);
+
+            //이건 디버깅용 로깅 구문임
+            console.log("AI 응답:", data);
+
         } catch (err) {
             console.error(err);
             alert("메시지 전송 중 오류 발생");
         }
     }
+
+    //추천 선택 박스 생성 함수
+    function appendRecommendChoice(message) {
+        const chatBody = document.getElementById("chatBody");
+
+        const block = document.createElement("div");
+        block.id = `recommend-block-${message.messageId}`;
+        block.classList.add("p-3", "mt-2", "mb-3", "border", "rounded", "bg-light");
+
+        block.innerHTML = `
+        <div class="mb-2 fw-bold">이 레시피에 필요한 식재료를 추천받으시겠어요?</div>
+        <button class="btn btn-success btn-sm me-2" onclick="confirmRecommendation(${message.sessionId}, ${message.messageId})">
+            예
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="rejectRecommendation('${block.id}')">
+            괜찮습니다
+        </button>
+    `;
+
+        chatBody.appendChild(block);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // 추천 생성 거부 선택 시
+    function rejectRecommendation(blockId) {
+        const el = document.getElementById(blockId);
+        if (el) el.remove();
+    }
+
+    // 추천 목록 생성 선택할 시
+    async function confirmRecommendation(sessionId, messageId) {
+        const blockId = `recommend-block-${messageId}`;
+        const block = document.getElementById(blockId);
+        if (!block) return;
+
+        // 로딩 표시
+        block.innerHTML = `<div class="text-muted">추천 상품을 불러오는 중입니다...</div>`;
+
+        try {
+            const res = await fetch("/api/ai/recommendations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId, messageId })
+            });
+
+            if (!res.ok) throw new Error("추천 생성 실패");
+            const items = await res.json();
+
+            // 추천 카드 렌더링
+            block.innerHTML = renderRecommendationCards(items);
+
+        } catch (err) {
+            console.error(err);
+            block.innerHTML = `<span class="text-danger">추천 중 오류가 발생했습니다.</span>`;
+        }
+    }
+
+    //상품 카드 렌더링
+    function renderRecommendationCards(items) {
+        if (!items || items.length === 0) {
+            return `<div class="text-muted">추천할 상품을 찾지 못했습니다.</div>`;
+        }
+
+        let html = `<div class="row">`;
+
+        items.forEach(item => {
+            html += `
+            <div class="col-6 mb-3">
+                <div class="card shadow-sm">
+                    <img src="${item.imageUrl}" class="card-img-top" style="height:140px; object-fit:cover;" />
+                    <div class="card-body">
+                        <h6 class="card-title">${item.productName}</h6>
+                        <p class="card-text fw-bold">${item.price}원</p>
+                        <button class="btn btn-success btn-sm" onclick="addToCart(${item.productId})">
+                            장바구니 담기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        });
+
+        html += `</div>`;
+        return html;
+    }
+
 
     // 페이지 로드 시 초기 세션 목록 표시
     document.addEventListener("DOMContentLoaded", loadSessions);
