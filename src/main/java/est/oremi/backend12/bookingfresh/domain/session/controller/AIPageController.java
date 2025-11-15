@@ -25,18 +25,11 @@ public class AIPageController {
     @GetMapping
     public String aiMainPage(@AuthenticationPrincipal Consumer user, Model model) {
 
-        // 로컬 개발 환경에서 인증이 비활성화된 경우 임시 사용자 주입
-//        if (user == null) {
-//            user = Consumer.builder()
-//                    .email("localuser@bookingfresh.dev")
-//                    .nickname("로컬테스터")
-//                    .address("서울시 강남구 테스트로 123")
-//                    .detailAddress("테스트빌딩 7층")
-//                    .build();
-//        }
-
         // 사용자 세션 목록 불러오기
         model.addAttribute("sessions", aiSessionService.getUserSessions(user));
+
+        // ② 프론트에서 사용할 consumerId 전달
+        model.addAttribute("consumerId", user.getId());
 
         // 템플릿으로 이동 (resources/templates/ai/chat.html)
         return "ai/chat";
