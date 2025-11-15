@@ -86,13 +86,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .session-item.active {
-            background-color: #e5e7eb !important; /* 연한 회색 */
-            cursor: default !important;
-            pointer-events: none; /* 클릭 비활성화 */
-        }
-
-
     </style>
 </head>
 
@@ -135,7 +128,6 @@
 </div>
 
 <script>
-    const consumerId = /*[[${consumerId}]]*/ null;
     let currentSessionId = null;
 
     // 새 세션 생성
@@ -509,31 +501,6 @@
 
         html += `</div>`;
         return html;
-    }
-
-    async function addToCart(productId) {
-        if (!consumerId) {
-            alert("로그인이 필요합니다.");
-            return;
-        }
-
-        try {
-            const res = await fetch(`/cart/add?consumerId=${consumerId}&productId=${productId}&quantity=1`, {
-                method: "POST"
-            });
-
-            if (!res.ok) {
-                alert("장바구니 추가에 실패했습니다.");
-                return;
-            }
-
-            // UI 피드백
-            alert("상품을 장바구니에 담았습니다!");
-
-        } catch (err) {
-            console.error("장바구니 오류:", err);
-            alert("장바구니 처리 중 문제가 발생했습니다.");
-        }
     }
 
 
