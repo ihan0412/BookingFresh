@@ -74,7 +74,7 @@
         }
 
         .user-bubble {
-            max-width: 70%;
+            max-width: 60%;
         }
         .ai-block {
             max-width: 95%;
@@ -84,6 +84,12 @@
             margin-bottom: 1rem;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .session-item.active {
+            background-color: #e5e7eb !important; /* 연한 회색 */
+            cursor: default !important;
+            pointer-events: none; /* 클릭 비활성화 */
         }
 
     </style>
@@ -189,6 +195,12 @@
             </div>
             ${itemsHtml}
         `;
+
+        // 세션 목록 갱신 후 active 표시 유지
+        if (currentSessionId) {
+            const target = document.querySelector(`.session-item[onclick="openSession(${currentSessionId})"]`);
+            if (target) target.classList.add("active");
+        }
     }
 
     function formatDate(dateString) {
@@ -204,6 +216,17 @@
         try {
             currentSessionId = sessionId;
 
+            /** 1) 좌측 세션 active 스타일 갱신 */
+            document.querySelectorAll(".session-item").forEach(item => {
+                item.classList.remove("active");
+            });
+
+            // 해당 sessionId를 가진 DOM 요소에 active 부여
+            const target = Array.from(document.querySelectorAll(".session-item"))
+                .find(item => item.getAttribute("onclick") === `openSession(${sessionId})`);
+
+            if (target) target.classList.add("active");
+            /** */
             const res = await fetch(`/api/ai/messages/${sessionId}`);
             if (!res.ok) throw new Error("대화 내역을 불러오지 못했습니다.");
 
@@ -326,6 +349,12 @@
         appendUserBubble(text);
         input.value = "";
 
+        // 입력창 비활성화
+        disableInput(true);
+
+        // 로딩 스피너 표시
+        showLoadingSpinner();
+
         try {
             const res = await fetch("/api/ai/messages", {
                 method: "POST",
@@ -339,6 +368,9 @@
             if (!res.ok) throw new Error("AI 요청 실패");
 
             const data = await res.json();
+
+            // 응답 도착 → 스피너 제거
+            hideLoadingSpinner();
 
             // AI 응답은 aiMessage(JSON 문자열) or content로 처리
             appendAIMarkdown(data.aiMessage);
@@ -529,6 +561,34 @@
         }
     }
 
+    // 시스템 응답 대기 중 화면에 임시로 띄울 블록
+    function showLoadingSpinner() {
+        const chatBody = document.getElementById("chatBody");
+
+        const loader = document.createElement("div");
+        loader.id = "ai-loading";
+        loader.classList.add("my-2");
+
+        loader.innerHTML = `
+        <div class="text-center p-3">
+            <div class="spinner-border text-success" role="status"></div>
+            <div class="small text-muted mt-2">AI 답변을 받고 있습니다...</div>
+        </div>
+    `;
+
+        chatBody.appendChild(loader);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function hideLoadingSpinner() {
+        const loader = document.getElementById("ai-loading");
+        if (loader) loader.remove();
+    }
+
+    function disableInput(flag) {
+        document.getElementById("messageInput").disabled = flag;
+        document.querySelector(".chat-input button").disabled = flag;
+    }
 
     // 페이지 로드 시 초기 세션 목록 표시
     document.addEventListener("DOMContentLoaded", loadSessions);
