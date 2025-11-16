@@ -15,8 +15,9 @@ public class AiMessageResponse {
     private String intentType;      // RECIPE_ASSISTANT / SHOPPING_ASSISTANT / ...
     private String responseType;    // STRUCTURED 결과 타입: RECIPE / SHOPPING / TEXT
     private String senderType;
+    private boolean hasRecommendation;
 
-    public static AiMessageResponse from(Message message) {
+    public static AiMessageResponse from(Message message, boolean hasRecommendation) {
         // USER → userMessage, AI → aiMessage 로 구분
         Message.SenderType sender = message.getSenderType();
         if (sender == Message.SenderType.USER) {
@@ -28,6 +29,7 @@ public class AiMessageResponse {
                     .intentType(message.getIntent() != null ? message.getIntent().name() : null)
 //                    .structuredJson(message.getStructuredJson())
 //                    .responseType(message.getType() != null ? message.getType().name() : null)
+                    .hasRecommendation(hasRecommendation)
                     .build();
         } else {
             return AiMessageResponse.builder()
@@ -37,6 +39,8 @@ public class AiMessageResponse {
                     .aiMessage(message.getContent())
                     .structuredJson(message.getStructuredJson())
                     .responseType(message.getStructuredType() != null ? message.getStructuredType().name() : null)
+                    .intentType(message.getIntent() != null ? message.getIntent().name() : null)
+                    .hasRecommendation(hasRecommendation)
                     .build();
         }
     }

@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 @Builder
 public class AiRecommendationResponse {
     private Long id;
+    private Long sessionId;
+    private Long messageId;
     private Long productId;
     private String productName;
     private BigDecimal price;
@@ -18,6 +20,8 @@ public class AiRecommendationResponse {
     public static AiRecommendationResponse from(AiRecommendation entity) {
         return AiRecommendationResponse.builder()
                 .id(entity.getIdx())
+                .sessionId(entity.getSession().getIdx())
+                .messageId(entity.getMessage().getIdx())
                 .productId(entity.getProductId())
                 .productName(entity.getProductName())
                 .price(entity.getPrice())
