@@ -144,7 +144,7 @@
 
     const consumerId = /*[[${consumerId}]]*/ null;
     let currentSessionId = null;
-
+    let sessionTitleRefreshed = {};
     /* ------------------------------
        인증 확인 후 페이지 초기화
     ------------------------------ */
@@ -169,6 +169,7 @@
         const session = await res.json();
 
         currentSessionId = session.id;
+        sessionTitleRefreshed[session.id] = false;
 
         document.querySelector(".chat-header").innerText = session.title || "새 AI 대화";
         document.getElementById("messageInput").disabled = false;
@@ -292,12 +293,27 @@
             if(data.responseType ==="RECIPE")
                 appendRecommendChoice(data);
 
+            if (!sessionTitleRefreshed[currentSessionId]) {
+                await refreshSessionTitle();
+                await loadSessions();
+                sessionTitleRefreshed[currentSessionId] = true;
+            }
+
         } catch (e) {
             console.error(e);
             alert("메시지 전송 실패");
         }
 
         disableInput(false);
+    }
+
+    async function refreshSessionTitle() {
+        if (!currentSessionId) return;
+        const sessionRes = await fetchWithAuth(`/api/ai/sessions/${currentSessionId}`);
+        const session = await sessionRes.json();
+
+        // 헤더 제목 갱신
+        document.querySelector(".chat-header").innerText = session.title;
     }
 
     /** ------------------------------
