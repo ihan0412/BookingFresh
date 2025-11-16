@@ -60,13 +60,14 @@ public class CouponController {
     @GetMapping("/my")
     public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // (3) 인증된 사용자 ID 가져오기
+
         Long consumerId = userDetails.getId();
         if (consumerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<UserCouponResponse> response = couponService.findAvailableUserCoupons(consumerId);
+         List<UserCouponResponse> response = couponService.findAvailableUserCoupons(consumerId);
+        // List<UserCouponResponse> response = couponService.findAllUserCoupons(consumerId);
 
         return ResponseEntity.ok(response);
     }
@@ -109,11 +110,10 @@ public class CouponController {
     @PatchMapping("/cart/item/coupon")
     public ResponseEntity<String> toggleCartItemCoupon(
             @RequestBody CouponCartItemRequest request,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // ⭐ 임시 소비자 ID
-        Long consumerId = 1L;
-
+        Long consumerId = userDetails.getId();
+        // Long consumerId = 1L;
         try {
             // CartCouponService 호출
             cartCouponService.toggleCartItemCouponApplication(request, consumerId);
