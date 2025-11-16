@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+
+<head>
+    <title>마이페이지</title>
+
+    <style layout:fragment="pageStyle">
+        .mypage-form {
+            max-width: 600px;
+            margin: 40px auto;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container mypage-form" layout:fragment="content">
+    <h2>마이페이지</h2>
+    <p>여기에 닉네임, 주소 변경 폼 등이 들어갑니다.</p>
+
+</div>
+
+<th:block layout:fragment="pageScript">
+    <script type="module" th:src="@{/js/mypage-api.js}"></script>
+</th:block>
+</body>
+</html>
