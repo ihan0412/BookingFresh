@@ -39,11 +39,14 @@ public class WebSecurityConfig {
                                         "/signup",
                                         "/login",
                                         "/home",
+                                        "/mypage", // SSR 구현을 위한 permitAll
+                                        "/mypage/**",
                                         // api 요청
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
 
                                         "/api/login",     // POST /api/login (로그인 처리)
                                         "/api/auth/refresh" // 토큰 재발급 처리
+
                                         //"/api/auth/logout",
                                         //"/api/coupons",
                                         //"/cart/add",

@@ -48,11 +48,13 @@
                 </ul>
 
                 <div id="auth-buttons" class="d-flex gap-2">
-                    <div id="logged-out-view" class="d-flex gap-2">
+
+                    <div id="logged-out-view" class="d-flex gap-2" th:unless="${isLoggedIn}">
                         <button class="clean-auth-btn" onclick="location.href='/login'">로그인</button>
                         <button class="clean-auth-btn signup" onclick="location.href='/signup'">회원가입</button>
                     </div>
-                    <div id="logged-in-view" class="d-none">
+
+                    <div id="logged-in-view" th:if="${isLoggedIn}">
                         <button id="logout-btn" class="clean-auth-btn">로그아웃</button>
                     </div>
                 </div>

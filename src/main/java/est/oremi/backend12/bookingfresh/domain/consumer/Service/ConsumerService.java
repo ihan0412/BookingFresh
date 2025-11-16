@@ -251,4 +251,13 @@ public class ConsumerService {
 
         return new ConsumerResponse(consumer);
     }
+
+    // 사용자 정보 조회
+    public ConsumerResponse getConsumerInfo(Long consumerId) {
+        Consumer consumer = consumerRepository.findById(consumerId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 ID: " + consumerId + " 를 찾을 수 없습니다."));
+
+        // 비밀번호를 제외한 나머지 정보를 담아 DTO로 반환
+        return new ConsumerResponse(consumer);
+    }
 }
