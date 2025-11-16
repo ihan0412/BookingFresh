@@ -36,7 +36,7 @@ export async function fetchWithAuth(url, options = {}) {
     let response = await fetch(url, options);
 
     // AT 만료 이후 재발급 로직
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
 
         // AT 재발급 요청(/api/auth/refresh) 자체가 401인 경우
         if (url.includes('/api/auth/refresh')) {

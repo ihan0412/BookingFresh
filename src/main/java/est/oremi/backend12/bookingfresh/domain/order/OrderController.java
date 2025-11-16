@@ -3,6 +3,8 @@ package est.oremi.backend12.bookingfresh.domain.order;
 import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import java.time.LocalDate;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +47,14 @@ public class OrderController {
     orderService.cancelOrder(orderId);
     return ResponseEntity.ok().build();
   }
+
+  // 모든 주문 조회
+  @GetMapping("/consumer/{consumerId}")
+  public ResponseEntity<List<OrderDto>> getConsumerOrders(@PathVariable Long consumerId) {
+    List<OrderDto> orders = orderService.getOrdersByConsumerId(consumerId);
+    return ResponseEntity.ok(orders);
+  }
+
 }
 
 

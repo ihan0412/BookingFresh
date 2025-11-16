@@ -290,11 +290,32 @@
                     <p>${data.address} ${data.detailAddress || ''}</p>
                 `;
 
+            // 쿠폰 개수 로드
+            await loadCouponCount();
+
         } catch (error) {
             console.error('사용자 정보 로드 실패:', error);
             document.getElementById('user-info').innerHTML = `
                     <p class="text-danger">사용자 정보를 불러올 수 없습니다.</p>
                 `;
+        }
+    }
+    // 쿠폰 개수 로드
+    async function loadCouponCount() {
+        try {
+            // (★수정★) URL 변경
+            const response = await fetchWithAuth(`/api/coupons/my`, {
+                method: 'GET'
+            });
+
+            const coupons = await response.json();
+            const availableCount = coupons.filter(c => !c.isUsed).length;
+
+            document.getElementById('coupon-count').textContent = `${availableCount}개`;
+
+        } catch (error) {
+            console.error('쿠폰 개수 로드 실패:', error);
+            document.getElementById('coupon-count').textContent = '-';
         }
     }
 
