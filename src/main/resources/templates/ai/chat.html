@@ -5,6 +5,10 @@
     <title>BookingFresh AI 도우미 🤖</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script type="module" th:src="@{/js/common-api.js}"></script>
+    <script type="module" th:src="@{/js/navbar-auth.js}"></script>
+
     <style>
         body {
             background-color: #f3f4f6;
@@ -32,6 +36,11 @@
         }
         .session-item:hover {
             background-color: #f9fafb;
+        }
+        .session-item.active {
+            background-color: #e5e7eb !important; /* 연한 회색 */
+            cursor: default !important;
+            pointer-events: none; /* 클릭 비활성화 */
         }
 
         /* 우측 채팅 */
@@ -86,25 +95,22 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .session-item.active {
-            background-color: #e5e7eb !important; /* 연한 회색 */
-            cursor: default !important;
-            pointer-events: none; /* 클릭 비활성화 */
-        }
+
 
     </style>
 </head>
 
 <body class="p-4">
+
+<div th:replace="~{navbar :: headerFragment}"></div>
 <div class="container">
     <h4 class="fw-bold mb-3">🍀 BookingFresh AI 도우미</h4>
 
     <div class="chat-container">
-
-        <!-- 좌측: 세션 목록 -->
-        <div class="session-list">
+        <!-- 좌측 세션 목록 -->
+        <div class="session-list" id="sessionList">
             <div class="p-3 border-bottom">
-                <button class="btn btn-success w-100" onclick="createSession()">+ 새 대화 시작</button>
+                <button class="btn btn-success w-100" id="btnNewSession">+ 새 대화 시작</button>
             </div>
 
             <div th:each="s : ${sessions}" class="session-item">
@@ -113,7 +119,7 @@
             </div>
         </div>
 
-        <!-- 우측: 채팅 영역 -->
+        <!-- 우측 채팅 영역 -->
         <div class="chat-panel">
             <div class="chat-header">BookingFresh AI 도우미</div>
 
@@ -126,141 +132,173 @@
 
             <div class="chat-input">
                 <input type="text" id="messageInput" placeholder="메시지를 입력하세요..." disabled>
-                <button disabled onclick="sendMessage()">전송</button>
+                <button id="btnSend" disabled>전송</button>
             </div>
         </div>
-
     </div>
 </div>
 
-<script>
+
+<script  type="module">
+    import { fetchWithAuth, checkLoginStatus, setAccessToken } from "/js/common-api.js";
+
     const consumerId = /*[[${consumerId}]]*/ null;
     let currentSessionId = null;
 
-    // 새 세션 생성
-    async function createSession() {
-        try {
-            const res = await fetch("/api/ai/sessions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" }
-            });
-
-            if (!res.ok) throw new Error("세션 생성 실패");
-            const session = await res.json();
-
-            currentSessionId = session.id;
-            console.log("새 세션 생성:", session);
-
-            // 채팅 영역 초기화
-            const chatBody = document.getElementById("chatBody");
-            chatBody.innerHTML = `
-                <div class='text-center text-muted mt-5'>
-                    <p>🤖 새 대화가 시작되었습니다.</p>
-                    <p class="small">이제 메시지를 입력해보세요!</p>
-                </div>
-            `;
-
-            // 헤더 업데이트
-            document.querySelector(".chat-header").innerText = session.title || "새 AI 대화";
-
-            // 입력창 활성화
-            document.getElementById("messageInput").disabled = false;
-            document.querySelector(".chat-input button").disabled = false;
-
-            // 세션 목록 갱신
-            await loadSessions();
-
-        } catch (err) {
-            console.error(err);
-            alert("세션 생성 중 오류가 발생했습니다.");
+    /* ------------------------------
+       인증 확인 후 페이지 초기화
+    ------------------------------ */
+    document.addEventListener("DOMContentLoaded", async () => {
+        const loggedIn = await checkLoginStatus();
+        if (!loggedIn) {
+            alert("로그인이 필요합니다.");
+            window.location.href = "/login";
+            return;
         }
+
+        loadSessions();
+    });
+
+    /* ------------------------------
+       세션 생성
+    ------------------------------ */
+    document.getElementById("btnNewSession").onclick = createSession;
+
+    async function createSession() {
+        const res = await fetchWithAuth("/api/ai/sessions", { method: "POST" });
+        const session = await res.json();
+
+        currentSessionId = session.id;
+
+        document.querySelector(".chat-header").innerText = session.title || "새 AI 대화";
+        document.getElementById("messageInput").disabled = false;
+        document.getElementById("btnSend").disabled = false;
+
+        document.getElementById("chatBody").innerHTML = `
+            <div class="text-center text-muted mt-5">
+                <p>🤖 새 대화가 시작되었습니다.</p>
+            </div>`;
+
+        loadSessions();
     }
 
-    //사용자 세션 불러오기, 사이드바에 렌더링
+    /* ------------------------------
+       세션 목록 로드
+    ------------------------------ */
     async function loadSessions() {
-        const res = await fetch("/api/ai/sessions");
+        const res = await fetchWithAuth("/api/ai/sessions");
         const sessions = await res.json();
 
-        const listContainer = document.querySelector(".session-list");
-        const itemsHtml = sessions.map(s => `
-            <div class="session-item" onclick="openSession(${s.id})">
+        const list = document.getElementById("sessionList");
+
+        const htmlItems = sessions.map(
+            s => `
+            <div class="session-item" data-id="${s.id}">
                 <div class="fw-semibold">${s.title}</div>
                 <small class="text-muted">${formatDate(s.lastMessageAt)}</small>
-            </div>
-        `).join("");
+            </div>`
+        ).join("");
 
-        listContainer.innerHTML = `
+        list.innerHTML = `
             <div class="p-3 border-bottom">
-                <button class="btn btn-success w-100" onclick="createSession()">+ 새 대화 시작</button>
+                <button class="btn btn-success w-100" id="btnNewSession">+ 새 대화 시작</button>
             </div>
-            ${itemsHtml}
+            ${htmlItems}
         `;
 
-        // 세션 목록 갱신 후 active 표시 유지
-        if (currentSessionId) {
-            const target = document.querySelector(`.session-item[onclick="openSession(${currentSessionId})"]`);
-            if (target) target.classList.add("active");
-        }
+        document.getElementById("btnNewSession").onclick = createSession;
+        document.querySelectorAll(".session-item").forEach(item => {
+            item.onclick = () => openSession(item.dataset.id);
+        });
+
+        if (currentSessionId) highlightActiveSession(currentSessionId);
     }
 
-    function formatDate(dateString) {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    function highlightActiveSession(id) {
+        document.querySelectorAll(".session-item").forEach(x => x.classList.remove("active"));
+        const t = document.querySelector(`.session-item[data-id="${id}"]`);
+        if (t) t.classList.add("active");
+    }
+
+    function formatDate(d) {
+        if (!d) return "";
+        const date = new Date(d);
+        return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
     }
 
     /** ------------------------------
-     *  세션 열기 → 기존 대화 불러오기
+     *  세션 열기 , 기존 대화 불러오기
      * ------------------------------*/
-    async function openSession(sessionId) {
-        try {
-            currentSessionId = sessionId;
+    async function openSession(id) {
+        currentSessionId = id;
+        highlightActiveSession(id);
 
-            /** 1) 좌측 세션 active 스타일 갱신 */
-            document.querySelectorAll(".session-item").forEach(item => {
-                item.classList.remove("active");
-            });
+        // 세션 제목 조회
+        const sessionRes = await fetchWithAuth(`/api/ai/sessions/${id}`);
+        const session = await sessionRes.json();
+        document.querySelector(".chat-header").innerText = session.title;
 
-            // 해당 sessionId를 가진 DOM 요소에 active 부여
-            const target = Array.from(document.querySelectorAll(".session-item"))
-                .find(item => item.getAttribute("onclick") === `openSession(${sessionId})`);
+        // 메시지 조회
+        const res = await fetchWithAuth(`/api/ai/messages/${id}`);
+        const messages = await res.json();
 
-            if (target) target.classList.add("active");
-            /** */
-            const res = await fetch(`/api/ai/messages/${sessionId}`);
-            if (!res.ok) throw new Error("대화 내역을 불러오지 못했습니다.");
+        const chatBody = document.getElementById("chatBody");
+        chatBody.innerHTML = "";
 
-            const messages = await res.json();
-
-            const chatBody = document.getElementById("chatBody");
-            chatBody.innerHTML = ""; // 초기화
-
-            if (messages.length === 0) {
-                chatBody.innerHTML = `
-                <div class="text-center text-muted mt-5">
-                    <p>🗨️ 아직 메시지가 없습니다.</p>
-                    <p class="small">이 세션에서 대화를 시작해보세요.</p>
-                </div>
-            `;
-            } else {
-                messages.forEach(msg => appendMessage(msg));
-            }
-
-            // 헤더 갱신
-            document.querySelector(".chat-header").innerText = `세션 #${sessionId}`;
-
-            // 입력창 활성화
-            document.getElementById("messageInput").disabled = false;
-            document.querySelector(".chat-input button").disabled = false;
-
-            chatBody.scrollTop = chatBody.scrollHeight;
-
-        } catch (err) {
-            console.error(err);
-            alert("세션을 불러오는 중 오류가 발생했습니다.");
+        if (messages.length === 0) {
+            chatBody.innerHTML = `
+            <div class="text-center text-muted mt-5">
+                <p>🗨️ 아직 메시지가 없습니다.</p>
+            </div>`;
+        } else {
+            messages.forEach(msg => appendMessage(msg));
         }
+
+        document.getElementById("messageInput").disabled = false;
+        document.getElementById("btnSend").disabled = false;
+
+        chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    /* ------------------------------
+       메시지 전송
+    ------------------------------ */
+    document.getElementById("btnSend").onclick = sendMessage;
+
+    async function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendUserBubble(text);
+        input.value = "";
+
+        disableInput(true);
+        showLoadingSpinner();
+
+        try {
+            const res = await fetchWithAuth("/api/ai/messages", {
+                method: "POST",
+                body: JSON.stringify({
+                    sessionId: currentSessionId,
+                    content: text
+                })
+            });
+
+            const data = await res.json();
+            hideLoadingSpinner();
+            appendAIMarkdown(data.aiMessage);
+
+            if(data.responseType ==="RECIPE")
+                appendRecommendChoice(data);
+
+        } catch (e) {
+            console.error(e);
+            alert("메시지 전송 실패");
+        }
+
+        disableInput(false);
+    }
 
     /** ------------------------------
      *  사용자 말풍선 렌더링
@@ -291,6 +329,7 @@
         // raw는 JSON 문자열일 수도 있고 순수 markdown일 수도 있음
         let markdownText = raw;
 
+        // JSON인지 판별
         try {
             const parsed = JSON.parse(raw);
             if (parsed && parsed.content) {
@@ -299,272 +338,20 @@
         } catch (e) {
             // parse 실패 → raw 그대로 사용
         }
-
+        // 블록 UI
         const block = document.createElement("div");
         block.classList.add("ai-block", "p-3", "mb-3", "rounded-3");
 
-        const html = marked.parse(markdownText);
-        block.innerHTML = html;
+        // Markdown 렌더링
+        block.innerHTML = marked.parse(markdownText);
 
         chatBody.appendChild(block);
         chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    /** ------------------------------
-     *  메시지 렌더링 분기 처리
-     * ------------------------------*/
-    function appendMessage(msg) {
-        if (msg.senderType === "USER") {
-            appendUserBubble(msg.userMessage);
-        } else if (msg.senderType === "AI") {
-            appendAIMarkdown(msg.aiMessage);
-
-            // 실시간 추천 요청 버튼
-            if (msg.responseType === "RECIPE" && !msg.hasRecommendation) {
-                appendRecommendChoice(msg);
-            }
-
-            // 재입장 시 추천 보기 버튼
-            if (msg.hasRecommendation) {
-                appendRecommendationViewButton(msg);
-            }
-        }
-    }
-
-
-    /** ------------------------------
-     *  메시지 전송
-     * ------------------------------*/
-    async function sendMessage() {
-        const input = document.getElementById("messageInput");
-        const text = input.value.trim();
-        if (!text) return;
-
-        if (!currentSessionId) {
-            alert("먼저 대화를 시작하세요.");
-            return;
-        }
-
-        // 사용자 메시지 즉시 렌더링
-        appendUserBubble(text);
-        input.value = "";
-
-        // 입력창 비활성화
-        disableInput(true);
-
-        // 로딩 스피너 표시
-        showLoadingSpinner();
-
-        try {
-            const res = await fetch("/api/ai/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    sessionId: currentSessionId,
-                    content: text
-                })
-            });
-
-            if (!res.ok) throw new Error("AI 요청 실패");
-
-            const data = await res.json();
-
-            // 응답 도착 → 스피너 제거
-            hideLoadingSpinner();
-
-            // AI 응답은 aiMessage(JSON 문자열) or content로 처리
-            appendAIMarkdown(data.aiMessage);
-
-            if(data.responseType ==="RECIPE")
-                appendRecommendChoice(data);
-
-            //이건 디버깅용 로깅 구문임
-            console.log("AI 응답:", data);
-
-        } catch (err) {
-            console.error(err);
-            alert("메시지 전송 중 오류 발생");
-        }
-    }
-
-    // 추천 선택 박스 생성 함수
-    function appendRecommendChoice(message) {
-        const chatBody = document.getElementById("chatBody");
-
-        const block = document.createElement("div");
-        block.id = `recommend-block-${message.messageId}`;
-        block.classList.add("p-3", "mt-2", "mb-3", "border", "rounded", "bg-light");
-
-        block.innerHTML = `
-        <div class="mb-2 fw-bold">이 레시피에 필요한 식재료를 추천받으시겠어요?</div>
-        <button class="btn btn-success btn-sm me-2" onclick="confirmRecommendation(${message.sessionId}, ${message.messageId})">
-            예
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="rejectRecommendation('${block.id}')">
-            괜찮습니다
-        </button>
-    `;
-
-        chatBody.appendChild(block);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    // 추천 생성 거부 선택 시
-    function rejectRecommendation(blockId) {
-        const el = document.getElementById(blockId);
-        if (el) el.remove();
-    }
-
-    // 추천 목록 생성 선택할 시
-    async function confirmRecommendation(sessionId, messageId) {
-        const blockId = `recommend-block-${messageId}`;
-        const block = document.getElementById(blockId);
-        if (!block) return;
-
-        // 로딩 표시
-        block.innerHTML = `<div class="text-muted">추천 상품을 불러오는 중입니다...</div>`;
-
-        try {
-            const res = await fetch("/api/ai/recommendations", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId, messageId })
-            });
-
-            if (!res.ok) throw new Error("추천 생성 실패");
-            const items = await res.json();
-
-            // 추천 카드 렌더링
-            block.innerHTML = renderRecommendationCards(items);
-
-        } catch (err) {
-            console.error(err);
-            block.innerHTML = `<span class="text-danger">추천 중 오류가 발생했습니다.</span>`;
-        }
-    }
-
-    // 세션 재입장 시 추천 상품 정보
-    function appendRecommendationViewButton(msg) {
-        const chatBody = document.getElementById("chatBody");
-
-        const block = document.createElement("div");
-        block.classList.add("p-3", "my-2");
-
-        block.innerHTML = `
-        <button class="btn btn-outline-success btn-sm"
-                onclick="loadRecommendationsForMessage(${msg.messageId})">
-            관련 상품 추천 다시 보기
-        </button>
-    `;
-
-        chatBody.appendChild(block);
-    }
-
-    //"추천 보기" 버튼 클릭 시 로더
-    async function loadRecommendationsForMessage(messageId) {
-        try {
-            const res = await fetch(`/api/ai/recommendations/${currentSessionId}`);
-            if (!res.ok) {
-                alert("추천 목록을 가져오지 못했습니다.");
-                return;
-            }
-
-            const recommendations = await res.json();
-
-            const targetId = Number(messageId);
-            const items = recommendations.filter(r => Number(r.messageId) === targetId);
-
-            if (items.length === 0) {
-                alert("해당 메시지에 대한 추천 내역이 없습니다.");
-                return;
-            }
-
-            const chatBody = document.getElementById("chatBody");
-
-            /** 1) 기존 동일 messageId 카드가 있다면 제거 */
-            document
-                .querySelectorAll(`.recommend-card-wrapper[data-mid="${targetId}"]`)
-                .forEach(el => el.remove());
-
-            /** 2) 카드 wrapper 생성 */
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("recommend-card-wrapper", "p-2", "mt-2");
-            wrapper.dataset.mid = targetId;  // messageId 저장 (중복 렌더링 방지)
-
-            /** 3) 카드 HTML 삽입 */
-            wrapper.innerHTML = renderRecommendationCards(items);
-
-            /** 4) 채팅창에 append */
-            chatBody.appendChild(wrapper);
-
-            /** 5) 스크롤을 맨 아래로 */
-            chatBody.scrollTop = chatBody.scrollHeight;
-
-        } catch (err) {
-            console.error("추천 조회 오류:", err);
-            alert("추천 상품을 불러오는 중 오류가 발생했습니다.");
-        }
-    }
-
-
-    //상품 카드 렌더링
-    function renderRecommendationCards(items) {
-        if (!items || items.length === 0) {
-            return `<div class="text-muted">추천할 상품을 찾지 못했습니다.</div>`;
-        }
-
-        let html = `<div class="row">`;
-
-        items.forEach(item => {
-            html += `
-            <div class="col-6 mb-3">
-                <div class="card shadow-sm">
-                    <img src="${item.imageUrl}" class="card-img-top" style="height:140px; object-fit:cover;" />
-                    <div class="card-body">
-                        <h6 class="card-title">${item.productName}</h6>
-                        <p class="card-text fw-bold">${item.price}원</p>
-                        <button class="btn btn-success btn-sm" onclick="addToCart(${item.productId})">
-                            장바구니 담기
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        });
-
-        html += `</div>`;
-        return html;
-    }
-
-    async function addToCart(productId) {
-        if (!consumerId) {
-            alert("로그인이 필요합니다.");
-            return;
-        }
-
-        try {
-            const res = await fetch(`/cart/add?consumerId=${consumerId}&productId=${productId}&quantity=1`, {
-                method: "POST"
-            });
-
-            if (!res.ok) {
-                alert("장바구니 추가에 실패했습니다.");
-                return;
-            }
-
-            // UI 피드백
-            alert("상품을 장바구니에 담았습니다!");
-
-        } catch (err) {
-            console.error("장바구니 오류:", err);
-            alert("장바구니 처리 중 문제가 발생했습니다.");
-        }
     }
 
     // 시스템 응답 대기 중 화면에 임시로 띄울 블록
     function showLoadingSpinner() {
         const chatBody = document.getElementById("chatBody");
-
         const loader = document.createElement("div");
         loader.id = "ai-loading";
         loader.classList.add("my-2");
@@ -590,8 +377,240 @@
         document.querySelector(".chat-input button").disabled = flag;
     }
 
-    // 페이지 로드 시 초기 세션 목록 표시
-    document.addEventListener("DOMContentLoaded", loadSessions);
+
+    /** ------------------------------
+     *  메시지 렌더링 분기 처리
+     * ------------------------------*/
+    function appendMessage(msg) {
+        if (msg.senderType === "USER") {
+            appendUserBubble(msg.userMessage);
+        } else if (msg.senderType === "AI") {
+            appendAIMarkdown(msg.aiMessage);
+
+            // 실시간 추천 요청 버튼
+            if (msg.responseType === "RECIPE" && !msg.hasRecommendation) {
+                appendRecommendChoice(msg);
+            }
+
+            // 재입장 시 추천 보기 버튼
+            if (msg.hasRecommendation) {
+                appendRecommendationViewButton(msg);
+            }
+        }
+    }
+
+    /** ------------------------------
+     *  추천 선택 박스 생성
+     * ------------------------------*/
+    function appendRecommendChoice(message) {
+        const chatBody = document.getElementById("chatBody");
+
+        const block = document.createElement("div");
+        block.id = `recommend-block-${message.messageId}`;
+        block.classList.add("p-3", "mt-2", "mb-3", "border", "rounded", "bg-light");
+
+        // 텍스트
+        const textDiv = document.createElement("div");
+        textDiv.classList.add("mb-2", "fw-bold");
+        textDiv.textContent = "이 레시피에 필요한 식재료를 추천받으시겠어요?";
+
+        // "예" 버튼
+        const yesBtn = document.createElement("button");
+        yesBtn.classList.add("btn", "btn-success", "btn-sm", "me-2");
+        yesBtn.textContent = "예";
+        yesBtn.addEventListener("click", () =>
+            confirmRecommendation(message.sessionId, message.messageId)
+        );
+
+        // "괜찮습니다" 버튼
+        const noBtn = document.createElement("button");
+        noBtn.classList.add("btn", "btn-outline-secondary", "btn-sm");
+        noBtn.textContent = "괜찮습니다";
+        noBtn.addEventListener("click", () =>
+            rejectRecommendation(block.id)
+        );
+
+        block.appendChild(textDiv);
+        block.appendChild(yesBtn);
+        block.appendChild(noBtn);
+
+        chatBody.appendChild(block);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // 추천 생성 거부 선택 시 박스 제거
+    function rejectRecommendation(blockId) {
+        const el = document.getElementById(blockId);
+        if (el) el.remove();
+    }
+
+    // 추천 목록 생성 선택할 시
+    async function confirmRecommendation(sessionId, messageId) {
+        const blockId = `recommend-block-${messageId}`;
+        const block = document.getElementById(blockId);
+        if (!block) return;
+
+        // 로딩 표시
+        block.innerHTML = `<div class="text-muted">추천 상품을 불러오는 중입니다...</div>`;
+
+        try {
+            const res = await fetchWithAuth("/api/ai/recommendations", {
+                method: "POST",
+                body: JSON.stringify({ sessionId, messageId })
+            });
+
+            const items = await res.json();
+
+            // 추천 카드 렌더링
+            renderRecommendationCards(block, items);
+
+        } catch (err) {
+            console.error(err);
+            block.innerHTML = `<span class="text-danger">추천 중 오류가 발생했습니다.</span>`;
+        }
+    }
+
+    // 세션 재입장 시 추천 상품 정보
+    function appendRecommendationViewButton(msg) {
+        const chatBody = document.getElementById("chatBody");
+
+        const block = document.createElement("div");
+        block.classList.add("p-3", "my-2");
+
+        const btn = document.createElement("button");
+        btn.classList.add("btn", "btn-outline-success", "btn-sm");
+        btn.textContent = "관련 상품 추천 다시 보기";
+        btn.addEventListener("click", () => loadRecommendationsForMessage(msg.messageId));
+
+        block.appendChild(btn);
+        chatBody.appendChild(block);
+    }
+
+    //"추천 다시 보기" 버튼 클릭 시
+    async function loadRecommendationsForMessage(messageId) {
+        try {
+            const res = await fetchWithAuth(`/api/ai/recommendations/${currentSessionId}`);
+            const recommendations = await res.json();
+
+            const targetId = Number(messageId);
+            const items = recommendations.filter(r => Number(r.messageId) === targetId);
+
+            if (items.length === 0) {
+                alert("해당 메시지에 대한 추천 내역이 없습니다.");
+                return;
+            }
+
+            const chatBody = document.getElementById("chatBody");
+
+            /** 1) 기존 동일 messageId 카드가 있다면 제거 */
+            document
+                .querySelectorAll(`.recommend-card-wrapper[data-mid="${targetId}"]`)
+                .forEach(el => el.remove());
+
+            /** 2) 카드 wrapper 생성 */
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("recommend-card-wrapper", "p-2", "mt-2");
+            wrapper.dataset.mid = targetId;  // messageId 저장 (중복 렌더링 방지)
+
+            /** 3) 카드 렌더링 */
+            renderRecommendationCards(wrapper, items);
+
+            /** 4) 채팅창에 append */
+            chatBody.appendChild(wrapper);
+
+            /** 5) 스크롤을 맨 아래로 */
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+        } catch (err) {
+            console.error("추천 조회 오류:", err);
+            alert("추천 상품을 불러오는 중 오류가 발생했습니다.");
+        }
+    }
+
+
+    //상품 카드 렌더링
+    function renderRecommendationCards(container, items) {
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div class="text-muted">추천할 상품을 찾지 못했습니다.</div>`;
+            return;
+        }
+
+        const row = document.createElement("div");
+        row.classList.add("row");
+
+        items.forEach(item => {
+            const col = document.createElement("div");
+            col.classList.add("col-6", "mb-3");
+
+            const card = document.createElement("div");
+            card.classList.add("card", "shadow-sm");
+
+            const img = document.createElement("img");
+            img.classList.add("card-img-top");
+            img.style.height = "140px";
+            img.style.objectFit = "cover";
+            img.src = item.imageUrl;
+
+            const body = document.createElement("div");
+            body.classList.add("card-body");
+
+            const title = document.createElement("h6");
+            title.classList.add("card-title");
+            title.textContent = item.productName;
+
+            const price = document.createElement("p");
+            price.classList.add("card-text", "fw-bold");
+            price.textContent = `${item.price}원`;
+
+            const btn = document.createElement("button");
+            btn.classList.add("btn", "btn-success", "btn-sm");
+            btn.textContent = "장바구니 담기";
+            btn.addEventListener("click", () => addToCart(item.productId));
+
+            body.appendChild(title);
+            body.appendChild(price);
+            body.appendChild(btn);
+
+            card.appendChild(img);
+            card.appendChild(body);
+            col.appendChild(card);
+            row.appendChild(col);
+        });
+
+        container.innerHTML = "";
+        container.appendChild(row);
+    }
+
+    async function addToCart(productId) {
+        if (!consumerId) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
+        try {
+            const res = await fetchWithAuth(
+                `/cart/add?consumerId=${consumerId}&productId=${productId}&quantity=1`,
+                { method: "POST" }
+            );
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                const msg = (data && data.message) || "장바구니 추가에 실패했습니다.";
+                alert(msg);
+                return;
+            }
+
+            alert("상품을 장바구니에 담았습니다!");
+
+        } catch (err) {
+            console.error("장바구니 오류:", err);
+            alert("장바구니 처리 중 문제가 발생했습니다.");
+        }
+    }
+
+
+
 </script>
 
 </body>
