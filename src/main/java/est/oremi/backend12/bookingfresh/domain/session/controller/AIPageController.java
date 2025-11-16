@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.session.controller;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AIMessageService;
 import est.oremi.backend12.bookingfresh.domain.session.Service.AISessionService;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
@@ -20,10 +21,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AIPageController {
     private final AISessionService aiSessionService;
-    private final AIMessageService aiMessageService;
+
+    private Consumer requireUser(CustomUserDetails userDetails) {
+        if (userDetails == null || userDetails.getConsumer() == null) {
+            throw new IllegalStateException("로그인이 필요합니다.");
+        }
+        return userDetails.getConsumer();
+    }
 
     @GetMapping
-    public String aiMainPage(@AuthenticationPrincipal Consumer user, Model model) {
+    public String aiMainPage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                             Model model) {
+        // CustomUserDetails → Consumer 변환
+        Consumer user = requireUser(userDetails);
 
         // 사용자 세션 목록 불러오기
         model.addAttribute("sessions", aiSessionService.getUserSessions(user));
@@ -33,34 +43,6 @@ public class AIPageController {
 
         // 템플릿으로 이동 (resources/templates/ai/chat.html)
         return "ai/chat";
-    }
-
-    @PostMapping("/messages")
-    public ResponseEntity<AiMessageResponse> sendMessage(
-            @AuthenticationPrincipal Consumer user,
-            @RequestBody AiMessageRequest request
-    ) {
-//         로컬 테스트용 더미 사용자
-        if (user == null) {
-            user = Consumer.builder()
-                    .email("localuser@bookingfresh.dev")
-                    .nickname("로컬테스터")
-                    .build();
-        }
-
-        AiMessageResponse response = aiMessageService.handleUserMessage(user, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/sessions")
-    public List<AiSessionResponse> getMySessions(@AuthenticationPrincipal Consumer user) {
-        if (user == null) {
-            user = Consumer.builder()
-                    .email("localuser@bookingfresh.dev")
-                    .nickname("로컬테스터")
-                    .build();
-        }
-        return aiSessionService.getUserSessions(user);
     }
 
 }
