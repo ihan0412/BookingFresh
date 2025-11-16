@@ -92,6 +92,28 @@ public class AuthenticationPageController {
         return "mypage/wishlist";
     }
 
+    // 3. 주문 상세 페이지 (/mypage/orders/{orderId})
+    @GetMapping("/mypage/orders/{orderId}")
+    public String orderDetailPage(
+            @PathVariable Long orderId, // (1) URL의 orderId를 받음
+            HttpServletRequest request,
+            Model model) {
+
+        // (2) 비로그인 시 리다이렉트
+        boolean loggedIn = isLoggedIn(request);
+        if (!loggedIn) {
+            return "redirect:/login";
+        }
+
+        // (3) 모델에 로그인 상태와 주문 ID 추가 (필요시)
+        model.addAttribute("isLoggedIn", true);
+        model.addAttribute("orderId", orderId); // (JS가 URL을 파싱하지만, 만약을 대비해 추가)
+
+        // (4) "mypage/order-detail.html" 템플릿 반환
+        // (order-detail.html 파일이 templates/mypage/ 폴더 안에 있어야 합니다)
+        return "mypage/order-detail";
+    }
+
     private boolean isLoggedIn(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
