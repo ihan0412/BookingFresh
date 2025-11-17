@@ -1,0 +1,71 @@
+:root {
+  --primary-color: #0078ff;
+  --accent-color: #00c896;
+  --text-color: #333;
+  --border-color: #ddd;
+  --input-bg: #f9f9f9;
+  --button-radius: 6px;
+  --font-family: 'Noto Sans KR', sans-serif;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-color);
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--button-radius);
+  background-color: var(--input-bg);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: var(--button-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #005fcc;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.alert {
+  background-color: var(--accent-color);
+  color: white;
+  padding: 12px;
+  border-radius: var(--button-radius);
+  margin-bottom: 16px;
+  text-align: center;
+}

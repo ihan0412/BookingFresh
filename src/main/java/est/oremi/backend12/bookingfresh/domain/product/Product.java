@@ -21,6 +21,7 @@ public class Product {
   private int stock;
   private String weight_pieces;
 
+  @Column(name = "photo_url")
   private String photoUrl;
 
   // 나중에 Photo 연동할 때 활성화
