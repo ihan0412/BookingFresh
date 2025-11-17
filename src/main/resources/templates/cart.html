@@ -2,7 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>장바구니</title>
-  <link rel="stylesheet" href="/css/cart.css">
   <style>
     .cart-container {
       display: flex;
@@ -76,72 +75,107 @@
 <main class="cart-container">
 
   <!-- 장바구니 상품 리스트 -->
-  <section class="cart-items">
-    <div class="cart-card" th:each="item : ${cartItems}">
-      <img th:src="${item.photoUrl}" alt="상품 이미지">
-      <div class="cart-info">
-        <h3 th:text="${item.name}">상품명</h3>
-        <p th:text="'가격: ₩' + ${item.price}">가격</p>
-
-        <!-- 삭제 버튼 -->
-        <form th:action="@{'/cart/delete/' + ${item.id}}" method="post" style="float:right;">
-          <input type="hidden" name="_method" value="delete"/>
-          <button type="submit" class="delete-button">삭제</button>
-        </form>
-
-        <div class="cart-actions">
-          <!-- ✅ 수량 조절 + 적용 버튼 -->
-          <form th:action="@{'/cart/update/' + ${item.id}}" method="post">
-            <input type="hidden" name="_method" value="put"/>
-
-            <button type="button" onclick="changeQuantity(this, -1)">-</button>
-            <input type="text" name="quantity" th:value="${item.quantity}" size="2" readonly/>
-            <button type="button" onclick="changeQuantity(this, 1)">+</button>
-
-            <button type="submit" class="apply-button">수량 적용</button>
-          </form>
-
-          <button class="coupon-button">쿠폰 적용</button>
-        </div>
-      </div>
-    </div>
-  </section>
+  <section class="cart-items" id="cartItems"></section>
 
   <!-- 장바구니 요약 -->
   <aside class="cart-summary">
     <h3>주문 요약</h3>
-    <div class="total-price" th:text="'총 상품 금액: ₩' + ${totalPrice}">총 상품 금액</div>
-    <form th:action="@{/orders/create}" method="post">
-      <button type="submit" class="checkout-button">구매하기</button>
-    </form>
+    <div class="total-price" id="totalPrice">총 상품 금액</div>
+    <button id="checkoutBtn" class="checkout-button">구매하기</button>
   </aside>
 
 </main>
 
-<!-- 푸터 fragment -->
-<th:block th:replace="fragments/footer :: footer"></th:block>
-<script>
-  function changeQuantity(button, delta) {
-    const input = button.parentElement.querySelector('input[name="quantity"]');
-    let current = parseInt(input.value);
-    let updated = current + delta;
-    if (updated < 1) updated = 1; // 최소 1개
-    input.value = updated;
-  }
-</script>
+<!--&lt;!&ndash; 푸터 fragment &ndash;&gt;-->
+<!--<th:block th:replace="fragments/footer :: footer"></th:block>-->
+<script type="module">
+  import { fetchWithAuth } from '/js/common-api.js';
 
-<!-- 메시지 팝업
-<script th:if="${cartMessage != null}">
-  alert([[${cartMessage}]]);
-</script>
-<script th:if="${updateMessage != null}">
-  alert([[${updateMessage}]]);
-</script>
-<script th:if="${deleteMessage != null}">
-  alert([[${deleteMessage}]]);
-</script>
-<script th:if="${clearMessage != null}">
-  alert([[${clearMessage}]]);-->
+  // 장바구니 불러오기
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const response = await fetchWithAuth("/api/cart", { method: "GET" });
+      if (response.ok) {
+        const cart = await response.json();
+
+        // 상품 목록 렌더링
+        const itemsContainer = document.getElementById("cartItems");
+        itemsContainer.innerHTML = cart.items.map(item => `
+        <div class="cart-card">
+          <img src="${item.photoUrl}" alt="상품 이미지">
+          <div class="cart-info">
+            <h3>${item.name}</h3>
+            <p>가격: ₩${item.price}</p>
+            <p>수량: ${item.quantity}</p>
+
+            <button class="delete-button" data-product-id="${item.id}">삭제</button>
+            <div class="cart-actions">
+              <button type="button" onclick="changeQuantity(this, -1)">-</button>
+              <input type="text" class="quantity-input" value="${item.quantity}" size="2" readonly/>
+              <button type="button" onclick="changeQuantity(this, 1)">+</button>
+              <button class="apply-button" data-product-id="${item.id}">수량 적용</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+        // 총액 표시
+        document.getElementById("totalPrice").textContent =
+            `총 상품 금액: ₩${cart.totalAmount}`;
+
+        // 삭제 이벤트
+        document.querySelectorAll(".delete-button").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const productId = btn.dataset.productId;
+            const res = await fetchWithAuth(`/api/cart/remove?productId=${productId}`, { method: "DELETE" });
+            if (res.ok) location.reload();
+          });
+        });
+
+        // 수량 적용 이벤트
+        document.querySelectorAll(".apply-button").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const productId = btn.dataset.productId;
+            const quantity = btn.parentElement.querySelector(".quantity-input").value;
+            const res = await fetchWithAuth(`/api/cart/update?productId=${productId}&quantity=${quantity}`, { method: "PATCH" });
+            if (res.ok) location.reload();
+          });
+        });
+
+        // 구매하기 버튼
+        document.getElementById("checkoutBtn").addEventListener("click", async () => {
+          try {
+            const res = await fetchWithAuth(`/orders/create?isReservation=false`, { method: "POST" });
+            if (res.ok) {
+              const order = await res.json(); // 주문 생성 결과 (OrderDto)
+              const orderId = order.orderId;
+              // 주문 상세 페이지로 이동
+              window.location.href = `/order/${orderId}`;
+            } else {
+              window.location.href = "/login";
+            }
+          } catch (err) {
+            alert("세션 만료. 다시 로그인해주세요.");
+            window.location.href = "/login";
+          }
+        });
+
+      } else {
+        window.location.href = "/login";
+      }
+    } catch (err) {
+      alert("세션 만료. 다시 로그인해주세요.");
+      window.location.href = "/login";
+    }
+  });
+
+  // 수량 변경 함수
+  window.changeQuantity = (btn, delta) => {
+    const input = btn.parentElement.querySelector(".quantity-input");
+    let value = parseInt(input.value) + delta;
+    if (value < 1) value = 1;
+    input.value = value;
+  };
 </script>
 </body>
 </html>
