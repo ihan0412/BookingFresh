@@ -39,16 +39,19 @@ public class WebSecurityConfig {
                                         "/signup",
                                         "/login",
                                         "/home",
+                                        "/mypage", // SSR 구현을 위한 permitAll
+                                        "/mypage/**",
                                         // api 요청
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
 
                                         "/api/login",     // POST /api/login (로그인 처리)
-                                        "/api/auth/refresh" // 토큰 재발급 처리
+                                        "/api/auth/refresh", // 토큰 재발급 처리
+
                                         //"/api/auth/logout",
                                         //"/api/coupons",
-                                        //"/cart/add",
-                                        //"/api/coupons/cart/item/coupon",
-                                        //"/orders/create",
+                                        "/cart/add",
+                                        "/api/coupons/cart/item/coupon",
+                                        "/orders/create"
                                         // "/api/me", // 개인정보 수정
                                         //"/api/coupons/consumer/*", // 사용자 쿠폰 조회
                                         //"/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함

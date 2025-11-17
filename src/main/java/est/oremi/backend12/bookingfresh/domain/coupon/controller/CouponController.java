@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.coupon.controller;
 
 import com.sun.security.auth.UserPrincipal;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.*;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CartCouponService;
@@ -55,15 +56,18 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
-    // 사용자가 소유하고 사용가능한 모든 쿠폰 조회
-    @GetMapping("/consumer/{consumerId}")
-    public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(@PathVariable Long consumerId) {
-        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다.
+    // 사용자가 소유한 쿠폰 조회
+    @GetMapping("/my")
+    public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long consumerId = userDetails.getId();
         if (consumerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<UserCouponResponse> response = couponService.findAvailableUserCoupons(consumerId);
+         List<UserCouponResponse> response = couponService.findAvailableUserCoupons(consumerId);
+        // List<UserCouponResponse> response = couponService.findAllUserCoupons(consumerId);
 
         return ResponseEntity.ok(response);
     }
@@ -106,11 +110,10 @@ public class CouponController {
     @PatchMapping("/cart/item/coupon")
     public ResponseEntity<String> toggleCartItemCoupon(
             @RequestBody CouponCartItemRequest request,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // ⭐ 임시 소비자 ID
-        Long consumerId = 1L;
-
+        Long consumerId = userDetails.getId();
+        // Long consumerId = 1L;
         try {
             // CartCouponService 호출
             cartCouponService.toggleCartItemCouponApplication(request, consumerId);

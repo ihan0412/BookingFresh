@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header th:fragment="headerFragment">
+
+    <nav class="navbar navbar-expand-lg navbar-light clean-navbar">
+        <div class="container-fluid px-4">
+
+            <a class="clean-navbar-brand me-4" href="/home">
+                <span>BOOKING</span><span>FRESH</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+
+                <form class="d-flex flex-grow-1 search-wrapper" role="search" onsubmit="return false;">
+                    <div class="input-group">
+                        <input class="form-control clean-search-input" type="search" placeholder="신선한 상품을 검색하세요" aria-label="Search">
+                        <button class="btn clean-search-btn" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.085.122l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.122-.085zm-6.5 1.352a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav d-flex flex-row align-items-center ms-auto me-3 gap-2">
+                    <li class="nav-item">
+                        <a class="clean-icon-link d-flex flex-column align-items-center" href="/mypage">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                            </svg>
+                            <small>마이페이지</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="clean-icon-link d-flex flex-column align-items-center" href="/cart">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L5.474 5H15.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 14.5 14H8a.5.5 0 0 1 0-1h6.5a.5.5 0 0 0 .09-.044l1.5-8A.5.5 0 0 0 15.5 6H5.474L2.938 1.954a.5.5 0 0 0-.01-.013V2.5h-.5a.5.5 0 0 1 0-1H2a.5.5 0 0 0-.485.379L.103 2.916.5 3.5zm3.5 10.5A1.5 1.5 0 1 1 5 12.5a1.5 1.5 0 0 1-3 0 1.5 1.5 0 0 1 3 0zM12.5 12a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
+                            </svg>
+                            <small>장바구니</small>
+                        </a>
+                    </li>
+                </ul>
+
+                <div id="auth-buttons" class="d-flex gap-2">
+
+                    <div id="logged-out-view" class="d-flex gap-2" th:unless="${isLoggedIn}">
+                        <button class="clean-auth-btn" onclick="location.href='/login'">로그인</button>
+                        <button class="clean-auth-btn signup" onclick="location.href='/signup'">회원가입</button>
+                    </div>
+
+                    <div id="logged-in-view" th:if="${isLoggedIn}">
+                        <button id="logout-btn" class="clean-auth-btn">로그아웃</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+</header>
+
+</body>
+</html>
