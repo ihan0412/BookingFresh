@@ -35,6 +35,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->   // 인증, 인가 설정
                         auth
                                 .requestMatchers(
+                                        "/h2-console/",
                                         // 페이지 요청, 페이지 요청만 인증이 필요한 페이지도 등록
                                         "/signup",
                                         "/login",
@@ -48,7 +49,7 @@ public class WebSecurityConfig {
                                         //"/api/auth/logout",
                                         //"/api/coupons",
                                         // 테스트를 위한 임시 api
-                                        "/cart/add",
+//                                        "/cart/add",
                                         "/api/coupons/cart/item/coupon",
                                         "/orders/create"
                                         // "/api/me", // 개인정보 수정
@@ -66,7 +67,8 @@ public class WebSecurityConfig {
                                         "cart",
                                         "/", // 리다이랙트
                                         "/products",
-                                        "/products/*" // 상품 상세 페이지
+                                        "/products/*", // 상품 상세 페이지
+                                        "/order/**"
                                 ).permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                                 .anyRequest().authenticated()

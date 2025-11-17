@@ -36,42 +36,69 @@
   </section>
 
 
-  <!-- ✅ 수량 선택 및 버튼 -->
   <section class="purchase-actions">
-    <form th:action="@{/cart/add}" method="post">
-      <input type="hidden" name="productId" th:value="${product.id}">
-      <label for="quantity">수량:</label>
-      <input type="number" id="quantity" name="quantity" min="1" value="1">
-      <button type="submit">장바구니 담기</button>
-    </form>
+    <!-- 수량 입력 필드 -->
+    <label for="quantity">수량:</label>
+    <input type="number" id="quantity" name="quantity" min="1" value="1">
+
+    <!-- 장바구니 버튼 -->
+    <button id="addToCartBtn" th:attr="data-product-id=${product.id}">장바구니 담기</button>
   </section>
 
 </main>
 
-<!-- 푸터 포함 -->
-<th:block th:replace="fragments/footer :: footer"></th:block>
+<!--&lt;!&ndash; 푸터 포함 &ndash;&gt;-->
+<!--<th:block th:replace="fragments/footer :: footer"></th:block>-->
+<script type="module">
+  import { fetchWithAuth } from '/js/common-api.js';
 
-</body>
-<script th:if="${cartMessage != null}">
-  alert([[${cartMessage}]]);
+  document.getElementById("addToCartBtn").addEventListener("click", async (e) => {
+    const productId = e.target.dataset.productId;
+    const quantity = document.getElementById("quantity").value; // ✅ 수량 입력값 읽기
+
+    try {
+      const response = await fetchWithAuth(`/api/cart/add?productId=${productId}&quantity=${quantity}`, {
+        method: "POST"
+      });
+
+      if (response.ok) {
+        alert("장바구니에 담았습니다!");
+        window.location.href = "/products"
+      } else {
+        window.location.href = "/login";
+      }
+    } catch (err) {
+      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+      window.location.href = "/login";
+    }
+  });
 </script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const bundleSelect = document.getElementById("bundle");
-    const priceDisplay = document.getElementById("bundle-price");
+    const bundleSelect = document.getElementById("bundle");       // 묶음 옵션
+    const quantityInput = document.getElementById("quantity");    // 수량 입력
+    const priceDisplay = document.getElementById("bundle-price"); // 총 가격 표시 영역
 
-    // 서버에서 전달된 단일 상품 가격
-    const unitPrice = /*[[${product.price}]]*/ 10740; // Thymeleaf가 렌더링 시 숫자로 치환
+    // 서버에서 전달된 단일 상품 가격 (Thymeleaf가 숫자로 치환)
+    const unitPrice = /*[[${product.price}]]*/ 10740;
 
     function updatePrice() {
-      const quantity = parseInt(bundleSelect.value);
-      const totalPrice = unitPrice * quantity;
+      const bundleCount = parseInt(bundleSelect.value);   // 묶음 옵션 값
+      const quantity = parseInt(quantityInput.value);     // 수량 입력 값
+      const totalPrice = unitPrice * bundleCount * quantity; // 총 가격 계산
+
       priceDisplay.textContent = `총 가격: ₩${totalPrice.toLocaleString()}`;
     }
 
+    // 이벤트 바인딩
     bundleSelect.addEventListener("change", updatePrice);
-    updatePrice(); // 초기 렌더링 시 가격 설정
+    quantityInput.addEventListener("input", updatePrice);
+
+    // 초기 렌더링 시 가격 설정
+    updatePrice();
   });
 </script>
+</body>
+
 
 </html>

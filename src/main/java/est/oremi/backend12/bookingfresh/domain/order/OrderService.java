@@ -207,6 +207,17 @@ public class OrderService {
       return BigDecimal.ZERO;
     }
   }
+  @Transactional
+  public void completeOrder(Long orderId) {
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문"));
+
+    if (order.getStatus() == Order.OrderStatus.COMPLETED) {
+      throw new IllegalStateException("이미 결제 완료된 주문입니다");
+    }
+
+    order.setStatus(Order.OrderStatus.COMPLETED);
+  }
 
   // OrderService에 추가 필요
   @Transactional(readOnly = true)
