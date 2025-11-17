@@ -1,0 +1,127 @@
+/* ================================================
+   인증 페이지 공통 스타일 (로그인, 회원가입)
+   ================================================ */
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px 15px;
+    min-height: 100vh;
+    margin: 0;
+    overflow-y: auto;
+}
+
+/* 인증 컨테이너 */
+.auth-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 40px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    margin: auto 0;
+}
+
+/* 헤더 박스 */
+.header-box {
+    background-color: #00B992;
+    color: white;
+    padding: 15px 0;
+    margin: -40px -40px 30px -40px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* 브랜드 타이틀 */
+.brand-title {
+    font-weight: 900;
+    color: #343a40;
+    font-size: 1.8rem;
+}
+
+.brand-highlight {
+    color: #00B992;
+}
+
+/* 폼 컨트롤 포커스 */
+.form-control:focus {
+    border-color: #00B992;
+    box-shadow: 0 0 0 0.25rem rgba(0, 185, 146, 0.35);
+}
+
+.form-control-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+/* 인증 버튼 */
+.btn-auth {
+    background-color: #00B992;
+    color: white;
+    border: none;
+    padding: 12px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.btn-auth:hover {
+    background-color: #00897b;
+    color: white;
+}
+
+.btn-auth:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* 에러 메시지 */
+.feedback {
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+    display: block;
+    min-height: 1.2em;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+/* 메시지 영역 */
+#message {
+    font-size: 1em;
+    min-height: 1.5em;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 576px) {
+    .auth-container {
+        padding: 25px;
+    }
+
+    .header-box {
+        font-size: 1.2rem;
+    }
+
+    .brand-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-height: 700px) {
+    body {
+        padding: 15px;
+        align-items: flex-start;
+    }
+
+    .auth-container {
+        margin-top: 0;
+    }
+}
