@@ -87,25 +87,21 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }*/
 
-    // 사용자가 사용 가능한, 소유하고 있는, 할인금액을 반영한 쿠폰 리스트
-    @GetMapping("/available/{productId}/consumer/{consumerId}/prices")
-    // ⭐ 반환 타입을 UserCouponProductResponse 리스트로 변경합니다.
+    @GetMapping("/applicable-to/{productId}")
     public ResponseEntity<List<UserCouponProductResponse>> getApplicableUserCouponsWithPrice(
             @PathVariable Long productId,
-            @PathVariable Long consumerId,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // Todo: 실제로는 인증 메커니즘을 통해 consumerId를 가져와야 합니다. PathValuable 말고
+        Long consumerId = userDetails.getId();
+
         if (productId == null || consumerId == null) {
             return ResponseEntity.badRequest().build();
         }
-        // ⭐ Service 호출은 그대로 유지 (매개변수가 consumerId, productId 2개로 통일됨)
+
         List<UserCouponProductResponse> response = couponService.findApplicableCouponsForUserAndProductWithPrice(consumerId, productId);
 
-        // 해당 사용자가 소유하고, 해당 상품에 적용 가능한 쿠폰 목록 (할인 금액 포함 및 정렬됨) 반환
         return ResponseEntity.ok(response);
     }
-
     //장바구니 항목에 쿠폰을 예약/해제하고, isApplied 상태를 업데이트합니다.
     @PatchMapping("/cart/item/coupon")
     public ResponseEntity<String> toggleCartItemCoupon(

@@ -63,7 +63,7 @@ public class WebSecurityConfig {
                                         "/mypage", "/mypage/**",
                                         "/chat",  // chat.html 페이지
                                         "/ai",     // AIPageController
-                                        "cart",
+                                        "/cart",
                                         "/", // 리다이랙트
                                         "/products",
                                         "/products/*" // 상품 상세 페이지

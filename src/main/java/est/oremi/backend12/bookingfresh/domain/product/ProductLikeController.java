@@ -1,9 +1,11 @@
 package est.oremi.backend12.bookingfresh.domain.product;
 
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import est.oremi.backend12.bookingfresh.domain.product.dto.ProductResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,28 +23,34 @@ public class ProductLikeController {
 
   // 좋아요 생성
   @PostMapping("/{productId}/like")
-  public ResponseEntity<Void> likeProduct(@PathVariable Long productId,
-      @RequestParam Long consumerId) {
+  public ResponseEntity<Void> likeProduct(
+          @PathVariable Long productId,
+          @AuthenticationPrincipal CustomUserDetails userDetails) { //  @AuthenticationPrincipal 사용
+    Long consumerId = userDetails.getId(); // ID 추출
     productLikeService.likeProduct(consumerId, productId);
     return ResponseEntity.ok().build();
   }
 
   // 좋아요 삭제
   @DeleteMapping("/{productId}/like")
-  public ResponseEntity<Void> unlikeProduct(@PathVariable Long productId,
-      @RequestParam Long consumerId) {
+  public ResponseEntity<Void> unlikeProduct(
+          @PathVariable Long productId,
+          @AuthenticationPrincipal CustomUserDetails userDetails) {
+    Long consumerId = userDetails.getId();
     productLikeService.unlikeProduct(consumerId, productId);
     return ResponseEntity.ok().build();
   }
 
-
-  //좋아요 표시한 목록 조회
+  // 좋아요 표시한 목록 조회
   @GetMapping("/likes")
-  public ResponseEntity<List<ProductResponse>> getLikedProducts(@RequestParam Long consumerId) {
+  public ResponseEntity<List<ProductResponse>> getLikedProducts(
+          @AuthenticationPrincipal CustomUserDetails userDetails) {
+    Long consumerId = userDetails.getId();
+
     List<Product> products = productLikeService.getLikedProducts(consumerId);
     List<ProductResponse> productResponses = products.stream()
-        .map(ProductResponse::fromEntity) // Product → ProductResponse 변환
-        .toList();
+            .map(ProductResponse::fromEntity)
+            .toList();
     return ResponseEntity.ok(productResponses);
   }
 
