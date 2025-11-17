@@ -23,9 +23,9 @@ public class OpenAiService {
 
     private final OpenAIClient openAiClient;
 
-    public AiResponseData formatAlanResponse(Message.IntentType purpose, String aiRawText) {
+    public AiResponseData formatAlanResponse(Message.IntentType intent, String aiRawText) {
 
-        return switch (purpose) {
+        return switch (intent) {
             case RECIPE_ASSISTANT -> parseRecipe(aiRawText);
             case COOKING_IDEA -> parseSuggestion(aiRawText);
             default -> new AiResponseData("TEXT", null, aiRawText);
@@ -193,11 +193,11 @@ public class OpenAiService {
                             - 문장의 핵심 주제를 간결히 표현
                             - 조사, 감탄사 제거
                             - 명사형으로 끝내기
-                            예: 
-                            - "두부조림 레시피 알려줘" → "두부조림 레시피"
-                            - "오늘 저녁 메뉴 추천해줘" → "저녁 메뉴 추천"
-                            - "마트에서 살 재료 추천" → "장보기 추천"
-                            """)
+                            예:\s
+                            - "두부조림 레시피 알려줘" 메시지에 대해 "두부조림 레시피" 라는 제목으로
+                            - "오늘 저녁 메뉴 추천해줘" 메시지에 대해 "저녁 메뉴 추천" 라는 제목으로
+                            - "마트에서 살 재료 추천" 메시지에 대해 "장보기 추천" 라는 제목으로
+                           \s""")
                             .build();
 
             // 사용자 메시지 설정

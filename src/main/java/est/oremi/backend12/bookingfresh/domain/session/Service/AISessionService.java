@@ -21,24 +21,9 @@ public class AISessionService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
     private final OpenAiService openAiService;
-    private final AlanApiClient alanApiClient;
-
-//    @Value("${ai.alan.client-id}")
-//    private String alanClientId;
 
     // 세션 생성
     public Session createSession(Consumer user) {
-
-//        // 기존 ACTIVE 세션 존재 시 종료 처리
-//        sessionRepository.findByUserAndStatus(user, Session.SessionStatus.ACTIVE)
-//                .ifPresent(session -> {
-//                    session.endSession();
-//                    sessionRepository.save(session);
-//                });
-//
-//        // Alan 서버 상태 초기화
-//        alanApiClient.resetAlanState(alanClientId);
-
 
         Session newSession = Session.builder()
                 .user(user)
@@ -50,24 +35,11 @@ public class AISessionService {
                 .build();
 
         return sessionRepository.save(newSession);
-//        Session saved = sessionRepository.save(newSession);
-//
-//        // 시작 메시지 자동 생성
-//        Message systemMsg = Message.builder()
-//                .session(saved)
-//                .senderType(Message.SenderType.AI)
-//                .type(Message.MessageType.SYSTEM)
-//                .content("안녕하세요 😊 요리 도우미입니다. 어떤 걸 도와드릴까요?")
-//                .createdAt(LocalDateTime.now())
-//                .build();
-//        messageRepository.save(systemMsg);
-//
-//        return saved;
     }
 
-    //세션 제목 자동 생성 (첫 유저 메시지 후)
+    //세션의 첫 메시지 처리
     public void handlePostMessage(Session session, Message userMessage) {
-        // 세션의 첫 메시지일 경우에만
+        // 세션의 첫 메시지로 세션 제목 생성
         if (session.getMessages().size() == 1 || session.getTitle() == null) {
             String title = openAiService.generateTitleFromMessage(userMessage.getContent());
             session.setTitle(title);

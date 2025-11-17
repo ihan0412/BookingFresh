@@ -7,6 +7,7 @@ import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageResponse;
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiResponseData;
+import est.oremi.backend12.bookingfresh.domain.session.repository.AiRecommendationRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.MessageRepository;
 import est.oremi.backend12.bookingfresh.domain.session.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.List;
 public class AIMessageService {
     private final SessionRepository sessionRepository;
     private final MessageRepository messageRepository;
+    private final AiRecommendationRepository recommendationRepository;
     private final AlanApiClient alanApiClient;     // 앨런 API 호출용
     private final OpenAiService openAiService;
     private final AISessionService aiSessionService;
@@ -38,7 +40,13 @@ public class AIMessageService {
         List<Message> messages = messageRepository.findBySessionOrderByCreatedAtAsc(session);
 
         return messages.stream()
-                .map(AiMessageResponse::from)
+                .map(m -> {
+                    // ⭐ 메시지에 대해 추천 존재 여부 조회
+                    boolean hasRecommendation = recommendationRepository.existsByMessage(m);
+
+                    // ⭐ 수정된 from() 시그니처대로 전달
+                    return AiMessageResponse.from(m, hasRecommendation);
+                })
                 .toList();
     }
 
@@ -53,35 +61,37 @@ public class AIMessageService {
         Message userMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.USER)
-                .type(Message.MessageType.QUESTION)
+//                .type(Message.MessageType.QUESTION)
                 .intent(intent)
                 .content(req.getContent())
                 .createdAt(LocalDateTime.now())
                 .build());
-
-        // 2.세션의 context 업데이트, 첫 메시지라면 세션 타이틀 생성
-        aiSessionService.updateSessionContext(session);
+        // 첫 메시지라면 세션 타이틀 생성
         aiSessionService.handlePostMessage(session, userMsg);
 
-        // 3. 앨런 LLM API 호출
+        // 2. 앨런 LLM API 호출
         String aiRawText = alanApiClient.askAlan(req.getContent(), alanClientId);
 
-        // 4. 세션 목적 기반 구조화 (JSON)
+        // 3. 세션 목적 기반 구조화 (JSON)
         AiResponseData structured = openAiService.formatAlanResponse(intent, aiRawText);
 
-        // 5. AI 응답 메시지 저장
+        // 4. AI 응답 메시지 저장
         Message aiMsg = messageRepository.save(Message.builder()
                 .session(session)
                 .senderType(Message.SenderType.AI)
-                .type(Message.MessageType.ANSWER)
                 .intent(intent)
                 .content(aiRawText)
                 .structuredJson(structured.json())
+                .structuredType(Message.StructuredType.valueOf(structured.type()))
                 .createdAt(LocalDateTime.now())
                 .build());
 
         session.updateLastMessageAt(LocalDateTime.now());
         sessionRepository.save(session);
+
+        // 5.세션의 context 업데이트
+        aiSessionService.updateSessionContext(session);
+
 
         // 6. DTO 응답
         return AiMessageResponse.builder()
@@ -90,7 +100,9 @@ public class AIMessageService {
                 .userMessage(userMsg.getContent())
                 .aiMessage(aiMsg.getContent())
                 .structuredJson(aiMsg.getStructuredJson())
+                .intentType(userMsg.getIntent().name())
                 .responseType(structured.type())
+                .hasRecommendation(false)
                 .build();
     }
 
