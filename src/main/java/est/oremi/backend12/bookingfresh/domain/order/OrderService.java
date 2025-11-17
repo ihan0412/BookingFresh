@@ -10,16 +10,18 @@ import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import est.oremi.backend12.bookingfresh.domain.product.Product;
-import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -204,6 +206,16 @@ public class OrderService {
       System.err.println("Coupon ID " + coupon.getId() + " has invalid discountValue.");
       return BigDecimal.ZERO;
     }
+  }
+
+  // OrderService에 추가 필요
+  @Transactional(readOnly = true)
+  public List<OrderDto> getOrdersByConsumerId(Long consumerId) {
+    List<Order> orders = orderRepository.findByConsumerId(consumerId);
+    return orders.stream()
+            .map(OrderDto::from)
+            .sorted(Comparator.comparing(OrderDto::getCreatedAt).reversed()) // 최신순
+            .collect(Collectors.toList());
   }
 }
 

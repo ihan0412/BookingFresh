@@ -1,9 +1,15 @@
-// In-Memory (인메모리) Access Token 저장소
-let inMemoryAccessToken = null;
+// API 공통 함수
 
-// In-Memory에 AT를 저장하는 함수 (로그인, 토큰 갱신 시 호출)
+// sessionStorage에서 사용할 Access Token의 키
+const TOKEN_KEY = 'accessToken';
+
+// AT를 sessionStorage에 저장하는 함수 (로그인, 토큰 갱신 시 호출)
 export function setAccessToken(token) {
-    inMemoryAccessToken = token;
+    if (token) {
+        sessionStorage.setItem(TOKEN_KEY, token);
+    } else {
+        sessionStorage.removeItem(TOKEN_KEY);
+    }
 }
 
 // "인터셉터" 역할을 하는 공통 fetch 함수
@@ -15,9 +21,10 @@ export async function fetchWithAuth(url, options = {}) {
     }
     options.credentials = 'include'; // RT 쿠키를 주고받기 위해 필수
 
-    // (인터셉트) In-Memory에 AT가 있으면 헤더에 추가
-    if (inMemoryAccessToken) {
-        options.headers['Authorization'] = `Bearer ${inMemoryAccessToken}`;
+    // (인터셉트) sessionStorage에 AT가 있으면 헤더에 추가
+    const accessToken = sessionStorage.getItem(TOKEN_KEY);
+    if (accessToken) {
+        options.headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
     // Content-Type 기본값 설정 (필요시)
@@ -29,12 +36,12 @@ export async function fetchWithAuth(url, options = {}) {
     let response = await fetch(url, options);
 
     // AT 만료 이후 재발급 로직
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
 
         // AT 재발급 요청(/api/auth/refresh) 자체가 401인 경우
         if (url.includes('/api/auth/refresh')) {
             console.error("Refresh Token이 만료되었습니다. 로그아웃 처리합니다.");
-            setAccessToken(null); // In-Memory 비우기
+            setAccessToken(null); // sessionStorage 비우기
             // 에러를 발생시켜 catch 블록으로 넘김
             throw new Error('Session expired');
         }
@@ -52,7 +59,7 @@ export async function fetchWithAuth(url, options = {}) {
             if (refreshResponse.ok) {
                 // 재발급 성공
                 const data = await refreshResponse.json();
-                setAccessToken(data.accessToken); // 새 AT를 In-Memory에 저장
+                setAccessToken(data.accessToken); // 새 AT를 sessionStorage에 저장
 
                 // 원래 요청의 헤더를 새 AT로 교체
                 options.headers['Authorization'] = `Bearer ${data.accessToken}`;
@@ -99,13 +106,13 @@ export async function checkLoginStatus() {
 
         // fetchWithAuth가 에러를 throw하므로, 이 라인에 도달하면 성공
         const data = await response.json();
-        setAccessToken(data.accessToken);
+        setAccessToken(data.accessToken); // sessionStorage에 새 AT 저장
         return true; // 로그인 상태
 
     } catch (error) {
         // (Session expired 등)
         console.log("로그인 상태 아님:", error.message);
-        setAccessToken(null);
+        setAccessToken(null); // sessionStorage 비우기
         return false; // 로그아웃 상태
     }
 }
@@ -122,7 +129,7 @@ export async function requestLogout() {
         console.error("서버 로그아웃 요청 중 오류:", error);
     } finally {
         // 서버 요청 결과와 상관없이 클라이언트 측 토큰 제거
-        setAccessToken(null);
+        setAccessToken(null); // sessionStorage 비우기
         console.log("클라이언트 로그아웃 완료.");
         window.location.href = '/'; // 홈으로 이동
     }

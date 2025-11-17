@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원 정보 변경 - BOOKING FRESH</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- 공통 CSS -->
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+  <link rel="stylesheet" th:href="@{/css/navbar.css}">
+
+  <!-- 카카오 주소 검색 API -->
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+  <style>
+    .edit-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .edit-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #00B992;
+    }
+
+    .edit-header h2 {
+      color: #343a40;
+      font-weight: 700;
+    }
+
+    /* 사용자 프로필 헤더 */
+    .profile-header {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background-color: #e9ecef;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-avatar svg {
+      width: 48px;
+      height: 48px;
+      fill: #6c757d;
+    }
+
+    .profile-info h4 {
+      color: #343a40;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .profile-info p {
+      color: #6c757d;
+      margin: 0;
+    }
+
+    /* 섹션 카드 */
+    .section-card {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-card h5 {
+      color: #00B992;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .btn-save {
+      background-color: #00B992;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+
+    .btn-save:hover {
+      background-color: #00897b;
+      color: white;
+    }
+
+    .btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+
+    .btn-cancel:hover {
+      background-color: #5a6268;
+      color: white;
+    }
+
+    .password-note {
+      font-size: 0.875rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
+    }
+
+    .feedback {
+      color: #dc3545;
+      font-size: 0.875em;
+      margin-top: 0.25rem;
+      display: block;
+      min-height: 1.2em;
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc3545;
+    }
+
+    .success-message {
+      color: #28a745;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 네비바 포함 -->
+<div th:replace="~{fragments/navbar :: headerFragment}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="main-wrapper">
+  <div class="container edit-container">
+
+    <div class="edit-header">
+      <h2>회원 정보 변경</h2>
+    </div>
+
+    <!-- 사용자 프로필 헤더 -->
+    <div class="profile-header" id="profile-header">
+      <div class="profile-avatar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+        </svg>
+      </div>
+      <div class="profile-info flex-grow-1">
+        <h4 id="current-nickname">로딩 중...</h4>
+        <p id="current-email">-</p>
+      </div>
+    </div>
+
+    <!-- 비밀번호 변경 섹션 -->
+    <div class="section-card">
+      <h5>비밀번호 변경</h5>
+      <form id="passwordForm">
+        <div class="mb-3">
+          <label for="currentPassword" class="form-label">현재 비밀번호</label>
+          <input type="password" class="form-control" id="currentPassword" name="currentPassword">
+          <div class="feedback" id="currentPasswordError"></div>
+          <div class="password-note">비밀번호를 변경하지 않으려면 비워두세요</div>
+        </div>
+        <div class="mb-3">
+          <label for="newPassword" class="form-label">새 비밀번호</label>
+          <input type="password" class="form-control" id="newPassword" name="newPassword">
+          <div class="feedback" id="newPasswordError"></div>
+        </div>
+        <div class="mb-3">
+          <label for="newPasswordConfirm" class="form-label">새 비밀번호 확인</label>
+          <input type="password" class="form-control" id="newPasswordConfirm" name="newPasswordConfirm">
+          <div class="feedback" id="newPasswordConfirmError"></div>
+        </div>
+        <button type="submit" class="btn btn-save">비밀번호 변경</button>
+      </form>
+      <div id="passwordMessage" class="mt-3"></div>
+    </div>
+
+    <!-- 닉네임 변경 섹션 -->
+    <div class="section-card">
+      <h5>닉네임 변경</h5>
+      <form id="nicknameForm">
+        <div class="mb-3">
+          <label for="nickname" class="form-label">새 닉네임</label>
+          <input type="text" class="form-control" id="nickname" name="nickname" placeholder="새로운 닉네임을 입력하세요">
+          <div class="feedback" id="nicknameError"></div>
+        </div>
+        <button type="submit" class="btn btn-save">닉네임 변경</button>
+      </form>
+      <div id="nicknameMessage" class="mt-3"></div>
+    </div>
+
+    <!-- 주소 변경 섹션 -->
+    <div class="section-card">
+      <h5>배송지 정보 변경</h5>
+      <form id="addressForm">
+        <div class="mb-3">
+          <label for="address" class="form-label">도로명 주소</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="address" name="address" placeholder="주소 검색 버튼을 클릭하세요" readonly>
+            <button type="button" class="btn btn-outline-secondary" onclick="execDaumPostcode()">주소 검색</button>
+          </div>
+          <div class="feedback" id="addressError"></div>
+        </div>
+        <div class="mb-3">
+          <label for="detailAddress" class="form-label">상세 주소</label>
+          <input type="text" class="form-control" id="detailAddress" name="detailAddress" placeholder="상세 주소를 입력하세요">
+          <div class="feedback" id="detailAddressError"></div>
+        </div>
+        <button type="submit" class="btn btn-save">주소 변경</button>
+      </form>
+      <div id="addressMessage" class="mt-3"></div>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div class="text-center mt-4">
+      <button class="btn btn-cancel" onclick="location.href='/mypage'">마이페이지로 돌아가기</button>
+    </div>
+
+  </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 공통 JS -->
+<script type="module" th:src="@{/js/common-api.js}"></script>
+<script type="module" th:src="@{/js/navbar-auth.js}"></script>
+
+<!-- 회원 정보 변경 스크립트 -->
+<script type="module">
+  import { fetchWithAuth } from '/js/common-api.js';
+
+  // 카카오 주소 검색 함수
+  window.execDaumPostcode = function() {
+    new daum.Postcode({
+      oncomplete: function(data) {
+        let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+        document.getElementById('address').value = addr;
+        document.getElementById('detailAddress').focus();
+      }
+    }).open();
+  };
+
+  // 에러 메시지 초기화
+  function clearErrors(formId) {
+    const form = document.getElementById(formId);
+    form.querySelectorAll('.feedback').forEach(el => el.textContent = '');
+    form.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+  }
+
+  // 필드별 에러 표시
+  function showFieldError(field, message) {
+    const errorElement = document.getElementById(field + 'Error');
+    const inputElement = document.getElementById(field);
+
+    if (errorElement) errorElement.textContent = message;
+    if (inputElement) inputElement.classList.add('is-invalid');
+  }
+
+  // 메시지 표시
+  function showMessage(elementId, message, isSuccess = true) {
+    const element = document.getElementById(elementId);
+    element.textContent = message;
+    element.className = isSuccess ? 'success-message' : 'feedback';
+  }
+
+  // 사용자 정보 로드
+  async function loadUserInfo() {
+    try {
+      const response = await fetchWithAuth('/api/me', {
+        method: 'GET'
+      });
+
+      const data = await response.json();
+
+      // 프로필 헤더 업데이트
+      document.getElementById('current-nickname').textContent = data.nickname;
+      document.getElementById('current-email').textContent = data.email;
+
+      // 폼 초기값 설정
+      document.getElementById('nickname').placeholder = `현재: ${data.nickname}`;
+      document.getElementById('address').value = data.address || '';
+      document.getElementById('detailAddress').value = data.detailAddress || '';
+
+    } catch (error) {
+      console.error('사용자 정보 로드 실패:', error);
+      alert('사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.');
+      location.href = '/login';
+    }
+  }
+
+  // 비밀번호 변경
+  document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearErrors('passwordForm');
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const newPasswordConfirm = document.getElementById('newPasswordConfirm').value;
+
+    // 클라이언트 측 유효성 검사
+    if (!currentPassword && !newPassword && !newPasswordConfirm) {
+      showMessage('passwordMessage', '변경할 정보를 입력해주세요.', false);
+      return;
+    }
+
+    if (newPassword || newPasswordConfirm) {
+      if (!currentPassword) {
+        showFieldError('currentPassword', '현재 비밀번호를 입력해주세요.');
+        return;
+      }
+      if (newPassword !== newPasswordConfirm) {
+        showFieldError('newPasswordConfirm', '새 비밀번호가 일치하지 않습니다.');
+        return;
+      }
+    }
+
+    try {
+      const response = await fetchWithAuth('/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          newPasswordConfirm
+        })
+      });
+
+      const data = await response.json();
+      showMessage('passwordMessage', '✅ 비밀번호가 성공적으로 변경되었습니다!', true);
+
+      // 폼 초기화
+      this.reset();
+
+    } catch (error) {
+      console.error('비밀번호 변경 실패:', error);
+      showMessage('passwordMessage', '❌ ' + error.message, false);
+    }
+  });
+
+  // 닉네임 변경
+  document.getElementById('nicknameForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearErrors('nicknameForm');
+
+    const nickname = document.getElementById('nickname').value.trim();
+
+    if (!nickname) {
+      showFieldError('nickname', '닉네임을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetchWithAuth('/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ nickname })
+      });
+
+      const data = await response.json();
+      showMessage('nicknameMessage', '✅ 닉네임이 성공적으로 변경되었습니다!', true);
+
+      // 프로필 헤더 업데이트
+      document.getElementById('current-nickname').textContent = data.nickname;
+      document.getElementById('nickname').value = '';
+      document.getElementById('nickname').placeholder = `현재: ${data.nickname}`;
+
+    } catch (error) {
+      console.error('닉네임 변경 실패:', error);
+      showMessage('nicknameMessage', '❌ ' + error.message, false);
+    }
+  });
+
+  // 주소 변경
+  document.getElementById('addressForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearErrors('addressForm');
+
+    const address = document.getElementById('address').value;
+    const detailAddress = document.getElementById('detailAddress').value;
+
+    if (!address) {
+      showFieldError('address', '주소를 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetchWithAuth('/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ address, detailAddress })
+      });
+
+      const data = await response.json();
+      showMessage('addressMessage', '✅ 주소가 성공적으로 변경되었습니다!', true);
+
+    } catch (error) {
+      console.error('주소 변경 실패:', error);
+      showMessage('addressMessage', '❌ ' + error.message, false);
+    }
+  });
+
+  // 페이지 로드 시 사용자 정보 로드
+  document.addEventListener('DOMContentLoaded', loadUserInfo);
+</script>
+
+</body>
+</html>

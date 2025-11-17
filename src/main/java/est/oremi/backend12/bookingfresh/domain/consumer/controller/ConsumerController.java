@@ -213,4 +213,20 @@ public class ConsumerController {
 
         return ResponseEntity.ok(updatedConsumer);
     }
+
+    // 사용자 정보 조회
+    @GetMapping("/me")
+    public ResponseEntity<ConsumerResponse> getConsumerInfo(
+            // @AuthenticationPrincipal로 현재 Security Context에 저장된 사용자 정보(CustomUserDetails)를 주입받음
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        // CustomUserDetails가 null이면 인증 실패이므로, Security Filter에서 처리됨 (403 또는 401).
+        // 여기까지 도달했다는 것은 인증되었다는 의미입니다.
+        Long consumerId = customUserDetails.getId();
+
+        // 서비스 메서드 호출
+        ConsumerResponse consumerInfo = consumerService.getConsumerInfo(consumerId);
+
+        return ResponseEntity.ok(consumerInfo);
+    }
 }

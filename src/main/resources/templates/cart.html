@@ -75,7 +75,7 @@
 
 <main class="cart-container">
 
-  <!-- ✅ 장바구니 상품 리스트 -->
+  <!-- 장바구니 상품 리스트 -->
   <section class="cart-items">
     <div class="cart-card" th:each="item : ${cartItems}">
       <img th:src="${item.photoUrl}" alt="상품 이미지">
@@ -107,7 +107,7 @@
     </div>
   </section>
 
-  <!-- ✅ 장바구니 요약 -->
+  <!-- 장바구니 요약 -->
   <aside class="cart-summary">
     <h3>주문 요약</h3>
     <div class="total-price" th:text="'총 상품 금액: ₩' + ${totalPrice}">총 상품 금액</div>
@@ -130,7 +130,7 @@
   }
 </script>
 
-<!-- ✅ 메시지 팝업 -->
+<!-- 메시지 팝업
 <script th:if="${cartMessage != null}">
   alert([[${cartMessage}]]);
 </script>
@@ -141,7 +141,7 @@
   alert([[${deleteMessage}]]);
 </script>
 <script th:if="${clearMessage != null}">
-  alert([[${clearMessage}]]);
+  alert([[${clearMessage}]]);-->
 </script>
 </body>
 </html>

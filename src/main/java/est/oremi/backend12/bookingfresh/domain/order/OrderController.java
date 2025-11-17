@@ -1,11 +1,15 @@
 package est.oremi.backend12.bookingfresh.domain.order;
 
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import java.time.LocalDate;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +48,17 @@ public class OrderController {
   public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
     orderService.cancelOrder(orderId);
     return ResponseEntity.ok().build();
+  }
+
+  // 모든 주문 조회
+  @GetMapping("/my")
+  public ResponseEntity<List<OrderDto>> getConsumerOrders(
+          @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    Long consumerId = userDetails.getId();
+
+    List<OrderDto> orders = orderService.getOrdersByConsumerId(consumerId);
+    return ResponseEntity.ok(orders);
   }
 }
 
