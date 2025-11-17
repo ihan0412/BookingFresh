@@ -7,6 +7,16 @@
     box-sizing: border-box;
 }
 
+:root {
+  --primary-color: #0078ff;
+  --accent-color: #00c896;
+  --text-color: #333;
+  --border-color: #ddd;
+  --input-bg: #f9f9f9;
+  --button-radius: 6px;
+  --font-family: 'Noto Sans KR', sans-serif;
+}
+
 body {
     font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: #343a40;
@@ -21,12 +31,34 @@ body {
     padding-top: 20px;
 }
 
-/* 공통 버튼 스타일 */
-.btn-primary-custom {
-    background-color: #00B992;
-    color: white;
-    border: none;
-    transition: background-color 0.3s;
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--button-radius);
+  background-color: var(--input-bg);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: var(--button-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #005fcc;
 }
 
 .btn-primary-custom:hover {
@@ -39,6 +71,9 @@ body {
     cursor: not-allowed;
 }
 
+.form-section {
+  margin-bottom: 24px;
+}
 /* 공통 카드 스타일 */
 .card-custom {
     background-color: white;
@@ -84,15 +119,30 @@ body {
     .main-wrapper {
         padding-top: 15px;
     }
-
-    .card-custom {
-        padding: 1.5rem;
-    }
 }
+
+.card-custom {
+    padding: 1.5rem;
+}
+
 
 /* 스크롤바 스타일 (선택사항) */
 ::-webkit-scrollbar {
     width: 10px;
+}
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.alert {
+  background-color: var(--accent-color);
+  color: white;
+  padding: 12px;
+  border-radius: var(--button-radius);
+  margin-bottom: 16px;
+  text-align: center;
 }
 
 ::-webkit-scrollbar-track {
@@ -107,3 +157,5 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #00897b;
 }
+
+
