@@ -124,6 +124,29 @@ public class CouponService {
                 .toList();
     }
 
+/*
+    @Transactional(readOnly = true)
+    public List<UserCouponResponse> findAllUserCoupons(Long consumerId) {
+        // 해당 사용자의 모든 UserCoupon 조회 (Coupon 정보 패치 조인)
+        List<UserCoupon> userCoupons = userCouponRepository.findByConsumerIdWithCoupon(consumerId);
+
+        return userCoupons.stream()
+                .filter(userCoupon -> userCoupon.getCoupon().getIsActive())
+
+                .map(userCoupon -> {
+                    Coupon coupon = userCoupon.getCoupon();
+                    List<CategoryCoupon> categoryCoupons = categoryCouponRepository.findByCouponId(coupon.getId());
+                    List<CategoryInfo> categories = categoryCoupons.stream()
+                            .map(CategoryCoupon::getCategory)
+                            .map(CategoryInfo::from)
+                            .distinct()
+                            .toList();
+                    return UserCouponResponse.from(userCoupon, categories);
+                })
+                .toList();
+    }
+*/
+
     @Transactional
     public void issueAllActiveCouponsToNewConsumer(Consumer newConsumer) {
         // 현재 DB에 존재하는 모든 활성 쿠폰 조회
@@ -149,7 +172,6 @@ public class CouponService {
     }
 
 
-    // Todo: 상품에 대한 쿠폰 적용 가격도 필요함
     private final ProductRepository productRepository;
     // 사용자가 소유하고 있으며, 상품에 적용 가능(카테고리)한 모든 쿠폰 조회
 /*

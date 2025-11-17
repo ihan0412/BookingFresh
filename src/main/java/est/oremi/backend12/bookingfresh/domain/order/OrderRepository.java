@@ -17,4 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o JOIN FETCH o.consumer WHERE o.deliveryDate = :deliveryDate")
     List<Order> findByDeliveryDateWithConsumer(@Param("deliveryDate") LocalDate deliveryDate);
+
+    @Query("SELECT o FROM Order o WHERE o.consumer.id = :consumerId ORDER BY o.createdAt DESC")
+    List<Order> findByConsumerId(@Param("consumerId") Long consumerId);
 }

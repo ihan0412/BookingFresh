@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - BOOKING FRESH</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+
+    <style>
+        .mypage-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .mypage-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #00B992;
+        }
+
+        .mypage-header h2 {
+            color: #343a40;
+            font-weight: 700;
+        }
+
+        /* 사용자 정보 카드 */
+        .user-info-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background-color: #e9ecef;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar svg {
+            width: 48px;
+            height: 48px;
+            fill: #6c757d;
+        }
+
+        .user-details h4 {
+            color: #343a40;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-details p {
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        .btn-edit-info {
+            background-color: #fff;
+            color: #00B992;
+            border: 2px solid #00B992;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit-info:hover {
+            background-color: #00B992;
+            color: white;
+        }
+
+        /* 메뉴 그리드 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .menu-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 185, 146, 0.2);
+            border-color: #00B992;
+        }
+
+        .menu-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .menu-card h5 {
+            color: #343a40;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* 최근 주문 섹션 */
+        .recent-orders {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        .recent-orders h5 {
+            color: #343a40;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .order-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .order-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        /* 로딩 상태 */
+        .loading-spinner {
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 네비바 포함 -->
+<div th:replace="~{fragments/navbar :: headerFragment}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="main-wrapper">
+    <div class="container mypage-container">
+
+        <div class="mypage-header">
+            <h2>마이페이지</h2>
+        </div>
+
+        <!-- 사용자 정보 카드 -->
+        <div class="user-info-card">
+            <div class="user-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                </svg>
+            </div>
+            <div class="user-details flex-grow-1" id="user-info">
+                <!-- 로딩 중 -->
+                <div class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">로딩 중...</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button class="btn-edit-info" onclick="location.href='/mypage/edit'">
+                    회원 정보 변경
+                </button>
+            </div>
+        </div>
+
+        <!-- 메뉴 그리드 -->
+        <div class="menu-grid">
+            <!-- 쿠폰 -->
+            <div class="menu-card" onclick="location.href='/mypage/coupons'">
+                <div class="menu-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#00B992" viewBox="0 0 16 16">
+                        <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.3c.601.212 1 .803 1 1.5s-.399 1.288-1 1.5v.3A1.5 1.5 0 0 0 2.5 9h11a1.5 1.5 0 0 0 1.5-1.5v-.3c-.601-.212-1-.803-1-1.5s.399-1.288 1-1.5v-.3A1.5 1.5 0 0 0 13.5 3z"/>
+                    </svg>
+                </div>
+                <h5>쿠폰</h5>
+                <p id="coupon-count">0개</p>
+            </div>
+
+            <!-- 찜 목록 -->
+            <div class="menu-card" onclick="location.href='/mypage/wishlist'">
+                <div class="menu-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#dc3545" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+                    </svg>
+                </div>
+                <h5>찜 목록</h5>
+                <p>저장한 상품</p>
+            </div>
+
+            <!-- AI 대화방 -->
+            <div class="menu-card" onclick="location.href='/ai'">
+                <div class="menu-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#6f42c1" viewBox="0 0 16 16">
+                        <path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                        <path d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9 9 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.4 10.4 0 0 1-.524 2.318l-.003.011a11 11 0 0 1-.244.637c-.079.186.074.394.273.362a22 22 0 0 0 .693-.125m.8-3.108a1 1 0 0 0-.287-.801C1.618 10.83 1 9.468 1 8c0-3.192 3.004-6 7-6s7 2.808 7 6-3.004 6-7 6a8 8 0 0 1-2.088-.272 1 1 0 0 0-.711.074c-.387.196-1.24.57-2.634.893a11 11 0 0 0 .398-2"/>
+                    </svg>
+                </div>
+                <h5>AI 대화방</h5>
+                <p>메뉴를 입력하면, 레시피 정보와 상품 정보를 조회 가능합니다!</p>
+            </div>
+        </div>
+
+        <!-- 최근 주문 내역 -->
+        <div class="recent-orders">
+            <h5>최근 주문 내역</h5>
+            <div id="order-list">
+                <!-- 로딩 중 -->
+                <div class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">주문 내역 로딩 중...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 공통 JS -->
+<script type="module" th:src="@{/js/common-api.js}"></script>
+<script type="module" th:src="@{/js/navbar-auth.js}"></script>
+
+<!-- 마이페이지 스크립트 -->
+<script type="module">
+    import { fetchWithAuth } from '/js/common-api.js';
+
+    // 사용자 정보 로드
+    async function loadUserInfo() {
+        try {
+            const response = await fetchWithAuth('/api/me', {
+                method: 'GET'
+            });
+
+            const data = await response.json();
+
+            // 사용자 정보 표시
+            document.getElementById('user-info').innerHTML = `
+                    <h4>${data.nickname}</h4>
+                    <p>${data.email}</p>
+                    <p>${data.address} ${data.detailAddress || ''}</p>
+                `;
+
+            // 쿠폰 개수 로드
+            await loadCouponCount();
+
+        } catch (error) {
+            console.error('사용자 정보 로드 실패:', error);
+            document.getElementById('user-info').innerHTML = `
+                    <p class="text-danger">사용자 정보를 불러올 수 없습니다.</p>
+                `;
+        }
+    }
+    // 쿠폰 개수 로드
+    async function loadCouponCount() {
+        try {
+            // (★수정★) URL 변경
+            const response = await fetchWithAuth(`/api/coupons/my`, {
+                method: 'GET'
+            });
+
+            const coupons = await response.json();
+            const availableCount = coupons.filter(c => !c.isUsed).length;
+
+            document.getElementById('coupon-count').textContent = `${availableCount}개`;
+
+        } catch (error) {
+            console.error('쿠폰 개수 로드 실패:', error);
+            document.getElementById('coupon-count').textContent = '-';
+        }
+    }
+
+
+    // 주문 내역 로드
+    async function loadRecentOrders() { // (1) consumerId 파라미터 제거
+        try {
+            const response = await fetchWithAuth(`/orders/my`, {
+                method: 'GET'
+            });
+
+            const orders = await response.json();
+
+            if (orders.length === 0) {
+                document.getElementById('order-list').innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                            </svg>
+                            <p class="mt-3">주문 내역이 없습니다</p>
+                            <small>상품을 주문하면 여기에 표시됩니다</small>
+                        </div>
+                    `;
+                return;
+            }
+
+            // 최근 3개만 표시
+            const recentOrders = orders.slice(0, 3);
+
+            document.getElementById('order-list').innerHTML = recentOrders.map(order => {
+                const statusBadge = getStatusBadge(order.status);
+                const deliveryType = order.isReservation ? '예약 배송' : '즉시 배송';
+
+                return `
+                        <div class="order-item" onclick="location.href='/mypage/orders/${order.orderId}'">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>주문번호: ${order.orderId}</strong>
+                                    ${statusBadge}
+                                    <span class="badge bg-secondary ms-2">${deliveryType}</span>
+                                    <p class="mb-1 mt-2 text-muted">${order.items.length}개 상품 · ${parseInt(order.finalCost).toLocaleString()}원</p>
+                                    <small class="text-muted">주문일: ${new Date(order.createdAt).toLocaleDateString()}</small>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#6c757d" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+
+        } catch (error) {
+            console.error('주문 내역 로드 실패:', error);
+            document.getElementById('order-list').innerHTML = `
+                    <div class="empty-state">
+                        <p class="text-danger">주문 내역을 불러올 수 없습니다</p>
+                    </div>
+                `;
+        }
+    }
+
+    function getStatusBadge(status) {
+        const statusMap = {
+            'PENDING': '<span class="badge bg-warning text-dark">대기중</span>',
+            'COMPLETED': '<span class="badge bg-success">완료</span>',
+            'CANCELLED': '<span class="badge bg-danger">취소됨</span>'
+        };
+        return statusMap[status] || '<span class="badge bg-secondary">알 수 없음</span>';
+    }
+
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadUserInfo();
+        loadRecentOrders();
+    });
+</script>
+
+</body>
+</html>

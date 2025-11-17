@@ -1,7 +1,6 @@
 package est.oremi.backend12.bookingfresh.domain.product;
 
 import est.oremi.backend12.bookingfresh.domain.product.dto.ProductResponse;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +21,7 @@ public class ProductController {
   // 전체 상품 페이징 조회
   @GetMapping
   public Page<ProductResponse> getProducts(Pageable pageable) {
-    return productService.getAllProducts(pageable);
+    return productService.findAll(pageable);
   }
 
   // 카테고리별 상품 페이징 조회
@@ -30,7 +29,7 @@ public class ProductController {
   public Page<ProductResponse> getProductsByCategory(
       @PathVariable Long categoryId,
       Pageable pageable) {
-    return productService.getProductsByCategory(categoryId, pageable);
+    return productService.searchProductsByCategory(categoryId, pageable);
   }
 
   // 검색어 기반 상품 조회

@@ -1,48 +1,39 @@
 package est.oremi.backend12.bookingfresh.domain.session.controller;
 
-import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
-import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
-import est.oremi.backend12.bookingfresh.domain.session.Service.AIMessageService;
-import est.oremi.backend12.bookingfresh.domain.session.Service.AISessionService;
-import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageRequest;
-import est.oremi.backend12.bookingfresh.domain.session.dto.AiMessageResponse;
-import est.oremi.backend12.bookingfresh.domain.session.dto.AiSessionResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-@RequestMapping("/ai")
-@RequiredArgsConstructor
 public class AIPageController {
-    private final AISessionService aiSessionService;
 
-    private Consumer requireUser(CustomUserDetails userDetails) {
-        if (userDetails == null || userDetails.getConsumer() == null) {
-            throw new IllegalStateException("로그인이 필요합니다.");
+    @GetMapping("/ai")
+    public String aiChatPage(HttpServletRequest request, Model model) {
+        // 1. RT 쿠키를 확인하여 로그인 상태를 가져옵니다.
+        boolean loggedIn = isLoggedIn(request);
+
+        // 2. (★핵심★) 로그인 되어있지 않다면
+        if (!loggedIn) {
+            return "redirect:/login"; // 3. 로그인 페이지로 리다이렉트
         }
-        return userDetails.getConsumer();
-    }
 
-    @GetMapping
-    public String aiMainPage(@AuthenticationPrincipal CustomUserDetails userDetails,
-                             Model model) {
-        // CustomUserDetails → Consumer 변환
-        Consumer user = requireUser(userDetails);
-
-        // 사용자 세션 목록 불러오기
-        model.addAttribute("sessions", aiSessionService.getUserSessions(user));
-
-        // 프론트에서 사용할 consumerId 전달
-        model.addAttribute("consumerId", user.getId());
-
-        // 템플릿으로 이동 (resources/templates/ai/chat.html)
+        // 4. 로그인 되어있다면, 모델에 상태를 담고 페이지 렌더링
+        model.addAttribute("isLoggedIn", true);
         return "ai/chat";
     }
 
+    private boolean isLoggedIn(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    // 쿠키가 존재하면 true 반환
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
