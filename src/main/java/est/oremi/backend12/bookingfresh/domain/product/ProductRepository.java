@@ -14,7 +14,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
   Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query("""
+    SELECT p
+    FROM Product p
+    WHERE 
+        LOWER(p.name) LIKE CONCAT('%', :keyword, '%')
+        OR LOWER(p.name) LIKE CONCAT('%', SUBSTRING(:keyword, 1, 1), '%')
+    """)
     List<Product> findByKeyword(@Param("keyword") String keyword);
 
     default List<Product> findByKeywords(List<String> keywords) {

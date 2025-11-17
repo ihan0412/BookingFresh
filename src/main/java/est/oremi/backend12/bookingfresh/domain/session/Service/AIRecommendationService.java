@@ -41,14 +41,15 @@ public class AIRecommendationService {
             List<String> ingredientNames = recipe.getIngredients().stream()
                     .map(RecipeSchema.Ingredient::getName)
                     .filter(Objects::nonNull)
-                    .map(String::trim)
-                    .map(name -> name.replaceAll("[^가-힣a-zA-Z0-9]", "").toLowerCase())
-                    .filter(s -> !s.isEmpty())
+                    .map(this::normalizeIngredientName)
+                    .filter(s -> !s.isBlank())
                     .toList();
+
+            log.info("최종 정제된 재료 목록 = {}", ingredientNames);
+
             if (ingredientNames.isEmpty()) {
                 return Collections.emptyList();
             }
-
             // ③ 상품 DB 검색 (이름 기반 매칭)
             List<Product> matchedProducts = productRepository.findByKeywords(ingredientNames)
                     .stream().distinct().toList();
@@ -75,6 +76,24 @@ public class AIRecommendationService {
         }
     }
 
+    // 재료 문자열 정제 로직
+    private String normalizeIngredientName(String name) {
+        if (name == null) return null;
+
+        // 1. 괄호 안 내용 제거
+        String cleaned = name.replaceAll("\\([^)]*\\)", "");
+
+        // 2. 한글/영문/숫자/공백 제외 제거
+        cleaned = cleaned.replaceAll("[^가-힣a-zA-Z0-9\\s]", " ");
+
+        // 3. 공백 정리
+        cleaned = cleaned.replaceAll("\\s+", " ");
+
+        // 4. trim + 소문자화
+        return cleaned.trim().toLowerCase();
+    }
+
+    //세션 내 추천된 내역 조회
     @Transactional(readOnly = true)
     public List<AiRecommendation> getRecommendationsBySession(Session session) {
         return recommendationRepository.findBySession(session);
