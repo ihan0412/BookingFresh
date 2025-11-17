@@ -1,6 +1,7 @@
 package est.oremi.backend12.bookingfresh.domain.product;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -17,14 +18,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("""
     SELECT p
     FROM Product p
-    WHERE 
-        LOWER(p.name) LIKE CONCAT('%', :keyword, '%')
-        OR LOWER(p.name) LIKE CONCAT('%', SUBSTRING(:keyword, 1, 1), '%')
+    WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
     """)
     List<Product> findByKeyword(@Param("keyword") String keyword);
 
     default List<Product> findByKeywords(List<String> keywords) {
         return keywords.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                // ⭐ 여기서 길이 필터링
+                .filter(k -> k.length() >= 2)   // 필요하면 allow-list 예외 추가
                 .flatMap(k -> findByKeyword(k).stream())
                 .distinct()
                 .collect(Collectors.toList());
