@@ -40,8 +40,6 @@ public class WebSecurityConfig {
                                         "/login",
                                         "/home",
                                         "index",
-                                        "cart",
-                                        "/products",
                                         // api 요청, 인증이 필요한 API는 여기에 올리면 안됨
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
                                         "/api/login",     // POST /api/login (로그인 처리)
@@ -64,7 +62,11 @@ public class WebSecurityConfig {
                                         // PageController가 RT 쿠키로 직접 보안 처리
                                         "/mypage", "/mypage/**",
                                         "/chat",  // chat.html 페이지
-                                        "/ai"     // AIPageController
+                                        "/ai",     // AIPageController
+                                        "cart",
+                                        "/", // 리다이랙트
+                                        "/products",
+                                        "/products/*" // 상품 상세 페이지
                                 ).permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                                 .anyRequest().authenticated()
