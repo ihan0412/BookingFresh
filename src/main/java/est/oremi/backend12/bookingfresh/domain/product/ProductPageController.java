@@ -1,0 +1,61 @@
+package est.oremi.backend12.bookingfresh.domain.product;
+
+import est.oremi.backend12.bookingfresh.domain.coupon.repository.CategoryRepository;
+import est.oremi.backend12.bookingfresh.domain.product.dto.ProductResponse;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+@RequestMapping("/products")
+@RequiredArgsConstructor
+public class ProductPageController {
+
+  private final ProductService productService;
+  private final CategoryRepository categoryRepository;
+
+
+  // 전체 상품 리스트 페이지
+  @GetMapping
+  public String showAllProducts(@PageableDefault(size = 24) Pageable pageable,
+      Model model) {
+    Page<ProductResponse> products = productService.findAll(pageable);
+    List<Category> categories = categoryRepository.findAll(); // 카테고리 전체 조회
+
+    model.addAttribute("products", products);
+    model.addAttribute("categories", categories);
+    return "index"; // 전체 상품 리스트 페이지
+  }
+
+  // 카테고리별 상품 리스트 (같은 index.html 사용)
+  @GetMapping(params = "categoryId")
+  public String showProductsByCategory(@RequestParam Long categoryId,
+      @PageableDefault(size = 24) Pageable pageable,
+      Model model) {
+    Page<ProductResponse> products = productService.searchProductsByCategory(categoryId, pageable);
+    List<Category> categories = categoryRepository.findAll(); // 카테고리 전체 조회
+
+    model.addAttribute("products", products);
+    model.addAttribute("categories", categories);
+
+    return "index";
+  }
+
+  // 상품 상세 페이지 렌더링
+  @GetMapping("/{productId}")
+  public String showProductDetail(@PathVariable Long productId, Model model) {
+    Product product = productService.findById(productId);
+    ProductResponse response = ProductResponse.fromEntity(product);
+    model.addAttribute("product", response);
+    return "product-detail";
+  }
+
+}
