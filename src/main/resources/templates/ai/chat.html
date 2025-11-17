@@ -2,109 +2,117 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookingFresh AI 도우미 🤖</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script type="module" th:src="@{/js/common-api.js}"></script>
-    <script type="module" th:src="@{/js/navbar-auth.js}"></script>
-
     <style>
-        body {
-            background-color: #f3f4f6;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-        .chat-container {
-            display: flex;
-            height: 85vh;
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        /* 좌측 세션 목록 */
-        .session-list {
-            width: 25%;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            overflow-y: auto;
-        }
-        .session-item {
-            padding: 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f1f1;
-        }
-        .session-item:hover {
-            background-color: #f9fafb;
-        }
-        .session-item.active {
-            background-color: #e5e7eb !important; /* 연한 회색 */
-            cursor: default !important;
-            pointer-events: none; /* 클릭 비활성화 */
-        }
 
-        /* 우측 채팅 */
-        .chat-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-header {
-            background: #70c97c;
-            color: white;
-            padding: 1rem;
-            font-weight: 600;
-        }
-        .chat-body {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            background: #fafafa;
-        }
-        .chat-input {
-            display: flex;
-            padding: 1rem;
-            border-top: 1px solid #e5e7eb;
-            background: #fff;
-        }
-        .chat-input input {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-        }
-        .chat-input button {
-            margin-left: 0.5rem;
-            border-radius: 8px;
-            background: #70c97c;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-        }
+    body {
+    background-color: #f3f4f6;
+    }
+    .chat-container {
+    display: flex;
+    height: 85vh;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    /* 좌측 세션 목록 */
+    .session-list {
+    width: 25%;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+    }
+    .session-item {
+    padding: 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f1f1;
+    }
+    .session-item:hover {
+    background-color: #f9fafb;
+    }
+    .session-item.active {
+    background-color: #e5e7eb !important;
+    cursor: default !important;
+    pointer-events: none;
+    }
 
-        .user-bubble {
-            max-width: 60%;
-        }
-        .ai-block {
-            max-width: 95%;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
+    /* 우측 채팅 */
+    .chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    }
+    .chat-header {
+    background: #70c97c;
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+    }
+    .chat-body {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #fafafa;
+    }
+    .chat-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+    }
+    .chat-input input {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    }
+    .chat-input button {
+    margin-left: 0.5rem;
+    border-radius: 8px;
+    background: #70c97c;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    }
 
+    .user-bubble {
+    max-width: 60%;
+    margin-left: auto;
+    background: #70c97c;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    }
 
-
+    .ai-block {
+    max-width: 95%;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
     </style>
 </head>
 
-<body class="p-4">
+<body>
 
-<div th:replace="~{navbar :: headerFragment}"></div>
-<div class="container">
-    <h4 class="fw-bold mb-3">🍀 BookingFresh AI 도우미</h4>
+<!-- 네비바 포함 -->
+<div th:replace="~{fragments/navbar :: headerFragment}"></div>
+
+<div class="container mt-4">
+    <h4 class="fw-bold mb-3">🤖 BookingFresh AI 도우미</h4>
 
     <div class="chat-container">
         <!-- 좌측 세션 목록 -->
@@ -112,11 +120,7 @@
             <div class="p-3 border-bottom">
                 <button class="btn btn-success w-100" id="btnNewSession">+ 새 대화 시작</button>
             </div>
-
-            <div th:each="s : ${sessions}" class="session-item">
-                <div class="fw-semibold" th:text="${s.title}">세션 제목</div>
-                <small class="text-muted" th:text="${#temporals.format(s.lastMessageAt, 'MM/dd HH:mm')}">시간</small>
-            </div>
+            <!-- 세션 목록이 여기에 동적으로 렌더링됩니다 -->
         </div>
 
         <!-- 우측 채팅 영역 -->
@@ -138,25 +142,46 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script  type="module">
-    import { fetchWithAuth, checkLoginStatus, setAccessToken } from "/js/common-api.js";
+<script type="module">
+    import { fetchWithAuth, checkLoginStatus } from "/js/common-api.js";
 
-    const consumerId = /*[[${consumerId}]]*/ null;
+    // ✅ 전역 변수
+    let consumerId = null;
     let currentSessionId = null;
     let sessionTitleRefreshed = {};
+
     /* ------------------------------
-       인증 확인 후 페이지 초기화
+       페이지 초기화 및 인증 확인
     ------------------------------ */
     document.addEventListener("DOMContentLoaded", async () => {
-        const loggedIn = await checkLoginStatus();
-        if (!loggedIn) {
-            alert("로그인이 필요합니다.");
-            window.location.href = "/login";
-            return;
-        }
+        try {
+            // 1. 로그인 상태 확인
+            const loggedIn = await checkLoginStatus();
+            if (!loggedIn) {
+                alert("로그인이 필요합니다.");
+                window.location.href = "/login";
+                return;
+            }
 
-        loadSessions();
+            // 2. 사용자 정보 조회
+            const userResponse = await fetchWithAuth('/api/me', {
+                method: 'GET'
+            });
+            const userData = await userResponse.json();
+            consumerId = userData.id;
+
+            console.log("✅ 사용자 인증 완료:", consumerId);
+
+            // 3. 세션 목록 로드
+            loadSessions();
+
+        } catch (error) {
+            console.error("초기화 실패:", error);
+            alert("사용자 정보를 불러올 수 없습니다.");
+            window.location.href = "/login";
+        }
     });
 
     /* ------------------------------
@@ -165,54 +190,63 @@
     document.getElementById("btnNewSession").onclick = createSession;
 
     async function createSession() {
-        const res = await fetchWithAuth("/api/ai/sessions", { method: "POST" });
-        const session = await res.json();
+        try {
+            const res = await fetchWithAuth("/api/ai/sessions", { method: "POST" });
+            const session = await res.json();
 
-        currentSessionId = session.id;
-        sessionTitleRefreshed[session.id] = false;
+            currentSessionId = session.id;
+            sessionTitleRefreshed[session.id] = false;
 
-        document.querySelector(".chat-header").innerText = session.title || "새 AI 대화";
-        document.getElementById("messageInput").disabled = false;
-        document.getElementById("btnSend").disabled = false;
+            document.querySelector(".chat-header").innerText = session.title || "새 AI 대화";
+            document.getElementById("messageInput").disabled = false;
+            document.getElementById("btnSend").disabled = false;
 
-        document.getElementById("chatBody").innerHTML = `
-            <div class="text-center text-muted mt-5">
-                <p>🤖 새 대화가 시작되었습니다.</p>
-            </div>`;
+            document.getElementById("chatBody").innerHTML = `
+                <div class="text-center text-muted mt-5">
+                    <p>🤖 새 대화가 시작되었습니다.</p>
+                </div>`;
 
-        loadSessions();
+            loadSessions();
+        } catch (error) {
+            console.error("세션 생성 실패:", error);
+            alert("세션을 생성할 수 없습니다.");
+        }
     }
 
     /* ------------------------------
        세션 목록 로드
     ------------------------------ */
     async function loadSessions() {
-        const res = await fetchWithAuth("/api/ai/sessions");
-        const sessions = await res.json();
+        try {
+            const res = await fetchWithAuth("/api/ai/sessions");
+            const sessions = await res.json();
 
-        const list = document.getElementById("sessionList");
+            const list = document.getElementById("sessionList");
 
-        const htmlItems = sessions.map(
-            s => `
-            <div class="session-item" data-id="${s.id}">
-                <div class="fw-semibold">${s.title}</div>
-                <small class="text-muted">${formatDate(s.lastMessageAt)}</small>
-            </div>`
-        ).join("");
+            const htmlItems = sessions.map(
+                s => `
+                <div class="session-item" data-id="${s.id}">
+                    <div class="fw-semibold">${s.title}</div>
+                    <small class="text-muted">${formatDate(s.lastMessageAt)}</small>
+                </div>`
+            ).join("");
 
-        list.innerHTML = `
-            <div class="p-3 border-bottom">
-                <button class="btn btn-success w-100" id="btnNewSession">+ 새 대화 시작</button>
-            </div>
-            ${htmlItems}
-        `;
+            list.innerHTML = `
+                <div class="p-3 border-bottom">
+                    <button class="btn btn-success w-100" id="btnNewSession">+ 새 대화 시작</button>
+                </div>
+                ${htmlItems}
+            `;
 
-        document.getElementById("btnNewSession").onclick = createSession;
-        document.querySelectorAll(".session-item").forEach(item => {
-            item.onclick = () => openSession(item.dataset.id);
-        });
+            document.getElementById("btnNewSession").onclick = createSession;
+            document.querySelectorAll(".session-item").forEach(item => {
+                item.onclick = () => openSession(item.dataset.id);
+            });
 
-        if (currentSessionId) highlightActiveSession(currentSessionId);
+            if (currentSessionId) highlightActiveSession(currentSessionId);
+        } catch (error) {
+            console.error("세션 목록 로드 실패:", error);
+        }
     }
 
     function highlightActiveSession(id) {
@@ -227,44 +261,52 @@
         return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
     }
 
-    /** ------------------------------
-     *  세션 열기 , 기존 대화 불러오기
-     * ------------------------------*/
+    /* ------------------------------
+       세션 열기
+    ------------------------------ */
     async function openSession(id) {
-        currentSessionId = id;
-        highlightActiveSession(id);
+        try {
+            currentSessionId = id;
+            highlightActiveSession(id);
 
-        // 세션 제목 조회
-        const sessionRes = await fetchWithAuth(`/api/ai/sessions/${id}`);
-        const session = await sessionRes.json();
-        document.querySelector(".chat-header").innerText = session.title;
+            // 세션 제목 조회
+            const sessionRes = await fetchWithAuth(`/api/ai/sessions/${id}`);
+            const session = await sessionRes.json();
+            document.querySelector(".chat-header").innerText = session.title;
 
-        // 메시지 조회
-        const res = await fetchWithAuth(`/api/ai/messages/${id}`);
-        const messages = await res.json();
+            // 메시지 조회
+            const res = await fetchWithAuth(`/api/ai/messages/${id}`);
+            const messages = await res.json();
 
-        const chatBody = document.getElementById("chatBody");
-        chatBody.innerHTML = "";
+            const chatBody = document.getElementById("chatBody");
+            chatBody.innerHTML = "";
 
-        if (messages.length === 0) {
-            chatBody.innerHTML = `
-            <div class="text-center text-muted mt-5">
-                <p>🗨️ 아직 메시지가 없습니다.</p>
-            </div>`;
-        } else {
-            messages.forEach(msg => appendMessage(msg));
+            if (messages.length === 0) {
+                chatBody.innerHTML = `
+                <div class="text-center text-muted mt-5">
+                    <p>🗨️ 아직 메시지가 없습니다.</p>
+                </div>`;
+            } else {
+                messages.forEach(msg => appendMessage(msg));
+            }
+
+            document.getElementById("messageInput").disabled = false;
+            document.getElementById("btnSend").disabled = false;
+
+            chatBody.scrollTop = chatBody.scrollHeight;
+        } catch (error) {
+            console.error("세션 열기 실패:", error);
+            alert("세션을 불러올 수 없습니다.");
         }
-
-        document.getElementById("messageInput").disabled = false;
-        document.getElementById("btnSend").disabled = false;
-
-        chatBody.scrollTop = chatBody.scrollHeight;
     }
 
     /* ------------------------------
        메시지 전송
     ------------------------------ */
     document.getElementById("btnSend").onclick = sendMessage;
+    document.getElementById("messageInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
 
     async function sendMessage() {
         const input = document.getElementById("messageInput");
@@ -290,8 +332,9 @@
             hideLoadingSpinner();
             appendAIMarkdown(data.aiMessage);
 
-            if(data.responseType ==="RECIPE")
+            if(data.responseType === "RECIPE") {
                 appendRecommendChoice(data);
+            }
 
             if (!sessionTitleRefreshed[currentSessionId]) {
                 await refreshSessionTitle();
@@ -301,6 +344,7 @@
 
         } catch (e) {
             console.error(e);
+            hideLoadingSpinner();
             alert("메시지 전송 실패");
         }
 
@@ -311,74 +355,49 @@
         if (!currentSessionId) return;
         const sessionRes = await fetchWithAuth(`/api/ai/sessions/${currentSessionId}`);
         const session = await sessionRes.json();
-
-        // 헤더 제목 갱신
         document.querySelector(".chat-header").innerText = session.title;
     }
 
-    /** ------------------------------
-     *  사용자 말풍선 렌더링
-     * ------------------------------*/
+    /* ------------------------------
+       메시지 렌더링
+    ------------------------------ */
     function appendUserBubble(text) {
         const chatBody = document.getElementById("chatBody");
         const bubble = document.createElement("div");
-        bubble.classList.add(
-            "user-bubble",
-            "ms-auto",
-            "p-2",
-            "mb-2",
-            "rounded-3",
-            "bg-success",
-            "text-white"
-        );
+        bubble.classList.add("user-bubble");
         bubble.innerText = text;
         chatBody.appendChild(bubble);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    /** ------------------------------
-     *  앨런 AI 응답 markdown 블록 렌더링
-     * ------------------------------*/
     function appendAIMarkdown(raw) {
         const chatBody = document.getElementById("chatBody");
 
-        // raw는 JSON 문자열일 수도 있고 순수 markdown일 수도 있음
         let markdownText = raw;
-
-        // JSON인지 판별
         try {
             const parsed = JSON.parse(raw);
             if (parsed && parsed.content) {
                 markdownText = parsed.content;
             }
-        } catch (e) {
-            // parse 실패 → raw 그대로 사용
-        }
-        // 블록 UI
-        const block = document.createElement("div");
-        block.classList.add("ai-block", "p-3", "mb-3", "rounded-3");
+        } catch (e) {}
 
-        // Markdown 렌더링
+        const block = document.createElement("div");
+        block.classList.add("ai-block");
         block.innerHTML = marked.parse(markdownText);
 
         chatBody.appendChild(block);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // 시스템 응답 대기 중 화면에 임시로 띄울 블록
     function showLoadingSpinner() {
         const chatBody = document.getElementById("chatBody");
         const loader = document.createElement("div");
         loader.id = "ai-loading";
-        loader.classList.add("my-2");
-
         loader.innerHTML = `
         <div class="text-center p-3">
             <div class="spinner-border text-success" role="status"></div>
             <div class="small text-muted mt-2">AI 답변을 받고 있습니다...</div>
-        </div>
-    `;
-
+        </div>`;
         chatBody.appendChild(loader);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
@@ -393,31 +412,25 @@
         document.querySelector(".chat-input button").disabled = flag;
     }
 
-
-    /** ------------------------------
-     *  메시지 렌더링 분기 처리
-     * ------------------------------*/
     function appendMessage(msg) {
         if (msg.senderType === "USER") {
             appendUserBubble(msg.userMessage);
         } else if (msg.senderType === "AI") {
             appendAIMarkdown(msg.aiMessage);
 
-            // 실시간 추천 요청 버튼
             if (msg.responseType === "RECIPE" && !msg.hasRecommendation) {
                 appendRecommendChoice(msg);
             }
 
-            // 재입장 시 추천 보기 버튼
             if (msg.hasRecommendation) {
                 appendRecommendationViewButton(msg);
             }
         }
     }
 
-    /** ------------------------------
-     *  추천 선택 박스 생성
-     * ------------------------------*/
+    /* ------------------------------
+       추천 상품 기능
+    ------------------------------ */
     function appendRecommendChoice(message) {
         const chatBody = document.getElementById("chatBody");
 
@@ -425,12 +438,10 @@
         block.id = `recommend-block-${message.messageId}`;
         block.classList.add("p-3", "mt-2", "mb-3", "border", "rounded", "bg-light");
 
-        // 텍스트
         const textDiv = document.createElement("div");
         textDiv.classList.add("mb-2", "fw-bold");
         textDiv.textContent = "이 레시피에 필요한 식재료를 추천받으시겠어요?";
 
-        // "예" 버튼
         const yesBtn = document.createElement("button");
         yesBtn.classList.add("btn", "btn-success", "btn-sm", "me-2");
         yesBtn.textContent = "예";
@@ -438,13 +449,10 @@
             confirmRecommendation(message.sessionId, message.messageId)
         );
 
-        // "괜찮습니다" 버튼
         const noBtn = document.createElement("button");
         noBtn.classList.add("btn", "btn-outline-secondary", "btn-sm");
         noBtn.textContent = "괜찮습니다";
-        noBtn.addEventListener("click", () =>
-            rejectRecommendation(block.id)
-        );
+        noBtn.addEventListener("click", () => rejectRecommendation(block.id));
 
         block.appendChild(textDiv);
         block.appendChild(yesBtn);
@@ -454,19 +462,16 @@
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // 추천 생성 거부 선택 시 박스 제거
     function rejectRecommendation(blockId) {
         const el = document.getElementById(blockId);
         if (el) el.remove();
     }
 
-    // 추천 목록 생성 선택할 시
     async function confirmRecommendation(sessionId, messageId) {
         const blockId = `recommend-block-${messageId}`;
         const block = document.getElementById(blockId);
         if (!block) return;
 
-        // 로딩 표시
         block.innerHTML = `<div class="text-muted">추천 상품을 불러오는 중입니다...</div>`;
 
         try {
@@ -476,8 +481,6 @@
             });
 
             const items = await res.json();
-
-            // 추천 카드 렌더링
             renderRecommendationCards(block, items);
 
         } catch (err) {
@@ -486,7 +489,6 @@
         }
     }
 
-    // 세션 재입장 시 추천 상품 정보
     function appendRecommendationViewButton(msg) {
         const chatBody = document.getElementById("chatBody");
 
@@ -502,7 +504,6 @@
         chatBody.appendChild(block);
     }
 
-    //"추천 다시 보기" 버튼 클릭 시
     async function loadRecommendationsForMessage(messageId) {
         try {
             const res = await fetchWithAuth(`/api/ai/recommendations/${currentSessionId}`);
@@ -518,23 +519,17 @@
 
             const chatBody = document.getElementById("chatBody");
 
-            /** 1) 기존 동일 messageId 카드가 있다면 제거 */
             document
                 .querySelectorAll(`.recommend-card-wrapper[data-mid="${targetId}"]`)
                 .forEach(el => el.remove());
 
-            /** 2) 카드 wrapper 생성 */
             const wrapper = document.createElement("div");
             wrapper.classList.add("recommend-card-wrapper", "p-2", "mt-2");
-            wrapper.dataset.mid = targetId;  // messageId 저장 (중복 렌더링 방지)
+            wrapper.dataset.mid = targetId;
 
-            /** 3) 카드 렌더링 */
             renderRecommendationCards(wrapper, items);
 
-            /** 4) 채팅창에 append */
             chatBody.appendChild(wrapper);
-
-            /** 5) 스크롤을 맨 아래로 */
             chatBody.scrollTop = chatBody.scrollHeight;
 
         } catch (err) {
@@ -543,8 +538,6 @@
         }
     }
 
-
-    //상품 카드 렌더링
     function renderRecommendationCards(container, items) {
         if (!items || items.length === 0) {
             container.innerHTML = `<div class="text-muted">추천할 상품을 찾지 못했습니다.</div>`;
@@ -609,9 +602,8 @@
                 { method: "POST" }
             );
 
-            const data = await res.json().catch(() => null);
-
             if (!res.ok) {
+                const data = await res.json().catch(() => null);
                 const msg = (data && data.message) || "장바구니 추가에 실패했습니다.";
                 alert(msg);
                 return;
@@ -624,9 +616,6 @@
             alert("장바구니 처리 중 문제가 발생했습니다.");
         }
     }
-
-
-
 </script>
 
 </body>
