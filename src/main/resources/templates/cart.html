@@ -82,15 +82,25 @@
       <div class="cart-info">
         <h3 th:text="${item.name}">상품명</h3>
         <p th:text="'가격: ₩' + ${item.price}">가격</p>
+
+        <!-- 삭제 버튼 -->
+        <form th:action="@{'/cart/delete/' + ${item.id}}" method="post" style="float:right;">
+          <input type="hidden" name="_method" value="delete"/>
+          <button type="submit" class="delete-button">삭제</button>
+        </form>
+
         <div class="cart-actions">
-          <!-- 수량 조절 버튼 -->
+          <!-- ✅ 수량 조절 + 적용 버튼 -->
           <form th:action="@{'/cart/update/' + ${item.id}}" method="post">
             <input type="hidden" name="_method" value="put"/>
-            <button type="submit" name="action" value="decrease">-</button>
-            <span th:text="${item.quantity}">1</span>
-            <button type="submit" name="action" value="increase">+</button>
+
+            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+            <input type="text" name="quantity" th:value="${item.quantity}" size="2" readonly/>
+            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+
+            <button type="submit" class="apply-button">수량 적용</button>
           </form>
-          <!-- 쿠폰 적용 버튼 -->
+
           <button class="coupon-button">쿠폰 적용</button>
         </div>
       </div>
@@ -110,6 +120,28 @@
 
 <!-- 푸터 fragment -->
 <th:block th:replace="fragments/footer :: footer"></th:block>
+<script>
+  function changeQuantity(button, delta) {
+    const input = button.parentElement.querySelector('input[name="quantity"]');
+    let current = parseInt(input.value);
+    let updated = current + delta;
+    if (updated < 1) updated = 1; // 최소 1개
+    input.value = updated;
+  }
+</script>
 
+<!-- ✅ 메시지 팝업 -->
+<script th:if="${cartMessage != null}">
+  alert([[${cartMessage}]]);
+</script>
+<script th:if="${updateMessage != null}">
+  alert([[${updateMessage}]]);
+</script>
+<script th:if="${deleteMessage != null}">
+  alert([[${deleteMessage}]]);
+</script>
+<script th:if="${clearMessage != null}">
+  alert([[${clearMessage}]]);
+</script>
 </body>
 </html>
