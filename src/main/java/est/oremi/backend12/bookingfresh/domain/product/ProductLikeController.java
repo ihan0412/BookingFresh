@@ -29,13 +29,13 @@ public class ProductLikeController {
     return ResponseEntity.ok().build();
   }*/
 
-  // 좋아요 삭제
+/*  // 좋아요 삭제
   @DeleteMapping("/{productId}/like")
   public ResponseEntity<Void> unlikeProduct(@PathVariable Long productId,
       @RequestParam Long consumerId) {
     productLikeService.unlikeProduct(consumerId, productId);
     return ResponseEntity.ok().build();
-  }
+  }*/
 
 
   // 좋아요 생성
@@ -46,7 +46,6 @@ public class ProductLikeController {
     productLikeService.likeProduct(customUserDetails.getId(), productId);
     return ResponseEntity.ok().build();
   }
-  /*
   // 좋아요 삭제
   @DeleteMapping("/{productId}/like")
   public ResponseEntity<Void> unlikeProduct(@PathVariable Long productId,
@@ -54,7 +53,6 @@ public class ProductLikeController {
     productLikeService.unlikeProduct(customUserDetails.getId(), productId);
     return ResponseEntity.ok().build();
   }
-  */
 
   //좋아요 표시한 목록 조회
   @GetMapping("/likes")

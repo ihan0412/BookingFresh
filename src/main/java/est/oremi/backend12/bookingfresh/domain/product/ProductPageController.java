@@ -69,10 +69,6 @@ public class ProductPageController {
   }
 
 
-  /**
-   * (★추가★)
-   * AuthenticationPageController에서 가져온 RT 쿠키 확인 헬퍼 메서드
-   */
   private boolean isLoggedIn(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
     if (cookies != null) {
