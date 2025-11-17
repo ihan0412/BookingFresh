@@ -3,6 +3,9 @@ package est.oremi.backend12.bookingfresh.domain.product;
 import est.oremi.backend12.bookingfresh.domain.coupon.repository.CategoryRepository;
 import est.oremi.backend12.bookingfresh.domain.product.dto.ProductResponse;
 import java.util.List;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,12 +29,14 @@ public class ProductPageController {
   // 전체 상품 리스트 페이지
   @GetMapping
   public String showAllProducts(@PageableDefault(size = 24) Pageable pageable,
-      Model model) {
+      Model model, HttpServletRequest request) {
     Page<ProductResponse> products = productService.findAll(pageable);
     List<Category> categories = categoryRepository.findAll(); // 카테고리 전체 조회
 
     model.addAttribute("products", products);
     model.addAttribute("categories", categories);
+
+    model.addAttribute("isLoggedIn", isLoggedIn(request));
     return "index"; // 전체 상품 리스트 페이지
   }
 
@@ -39,10 +44,13 @@ public class ProductPageController {
   @GetMapping(params = "categoryId")
   public String showProductsByCategory(@RequestParam Long categoryId,
       @PageableDefault(size = 24) Pageable pageable,
-      Model model) {
+      Model model, HttpServletRequest request) {
     Page<ProductResponse> products = productService.searchProductsByCategory(categoryId, pageable);
     List<Category> categories = categoryRepository.findAll(); // 카테고리 전체 조회
 
+    model.addAttribute("isLoggedIn", isLoggedIn(request));
+
+    model.addAttribute("selectedCategoryId", categoryId);
     model.addAttribute("products", products);
     model.addAttribute("categories", categories);
 
@@ -51,11 +59,29 @@ public class ProductPageController {
 
   // 상품 상세 페이지 렌더링
   @GetMapping("/{productId}")
-  public String showProductDetail(@PathVariable Long productId, Model model) {
+  public String showProductDetail(@PathVariable Long productId, Model model,
+                                  HttpServletRequest request) {
     Product product = productService.findById(productId);
     ProductResponse response = ProductResponse.fromEntity(product);
     model.addAttribute("product", response);
+    model.addAttribute("isLoggedIn", isLoggedIn(request));
     return "product-detail";
   }
 
+
+  /**
+   * (★추가★)
+   * AuthenticationPageController에서 가져온 RT 쿠키 확인 헬퍼 메서드
+   */
+  private boolean isLoggedIn(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("refreshToken".equals(cookie.getName())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 }

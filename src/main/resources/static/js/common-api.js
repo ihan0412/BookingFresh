@@ -131,6 +131,6 @@ export async function requestLogout() {
         // 서버 요청 결과와 상관없이 클라이언트 측 토큰 제거
         setAccessToken(null); // sessionStorage 비우기
         console.log("클라이언트 로그아웃 완료.");
-        window.location.href = '/home'; // 홈으로 이동
+        window.location.href = '/'; // 홈으로 이동
     }
 }

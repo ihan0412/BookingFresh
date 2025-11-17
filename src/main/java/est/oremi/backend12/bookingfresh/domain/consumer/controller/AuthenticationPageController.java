@@ -33,10 +33,19 @@ public class AuthenticationPageController {
         return "authentication/login";
     }
 
-    @GetMapping("/home") // (★ 이 부분이 빠져있었습니다 ★)
+/*    @GetMapping("/home") // (★ 이 부분이 빠져있었습니다 ★)
     public String homePage(HttpServletRequest request, Model model) {
         model.addAttribute("isLoggedIn", isLoggedIn(request)); // (정상)
         return "home";
+    }*/
+    
+    @GetMapping("/home")
+    public String homeRedirect() {
+        return "redirect:/products";
+    }
+    @GetMapping("/")
+    public String rootRedirect() {
+        return "redirect:/products";
     }
 
     // 2. 마이페이지 (/mypage)

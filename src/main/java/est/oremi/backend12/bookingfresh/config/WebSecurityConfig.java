@@ -39,6 +39,9 @@ public class WebSecurityConfig {
                                         "/signup",
                                         "/login",
                                         "/home",
+                                        "index",
+                                        "cart",
+                                        "/products",
                                         // api 요청, 인증이 필요한 API는 여기에 올리면 안됨
                                         "/api/signup",   // POST /api/signup (회원가입 처리)
                                         "/api/login",     // POST /api/login (로그인 처리)
