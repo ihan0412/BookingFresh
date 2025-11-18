@@ -4,10 +4,12 @@ import est.oremi.backend12.bookingfresh.domain.cart.Cart;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItem;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItemRepository;
 import est.oremi.backend12.bookingfresh.domain.cart.CartRepository;
+import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
+import est.oremi.backend12.bookingfresh.domain.order.dto.DeliveryUpdateRequest;
 import est.oremi.backend12.bookingfresh.domain.order.dto.OrderDto;
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import java.math.BigDecimal;
@@ -127,6 +129,15 @@ public class OrderService {
 
     return OrderDto.from(order);
   }
+  // 주문 수정
+  @Transactional
+  public void updateDeliveryInfo(Long orderId, DeliveryUpdateRequest request) {
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문"));
+
+    order.setDeliveryDate(request.getDeliveryDate());
+    order.setDeliverySlot(request.getDeliverySlot());
+  }
 
   // 주문 취소
   @Transactional
@@ -208,14 +219,30 @@ public class OrderService {
     }
   }
   @Transactional
-  public void completeOrder(Long orderId) {
+  public void completeOrder(Long orderId, Long consumerId, DeliveryUpdateRequest request) {
     Order order = orderRepository.findById(orderId)
         .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문"));
+
+    // 권한 확인
+    if (!order.getConsumer().getId().equals(consumerId)) {
+      throw new SecurityException("주문 권한이 없습니다.");
+    }
 
     if (order.getStatus() == Order.OrderStatus.COMPLETED) {
       throw new IllegalStateException("이미 결제 완료된 주문입니다");
     }
 
+    // 배송 날짜 유효성 검사
+    LocalDate tomorrow = LocalDate.now().plusDays(1);
+    if (request.getDeliveryDate().isBefore(tomorrow)) {
+      throw new IllegalArgumentException("배송 날짜는 최소 내일 이후여야 합니다.");
+    }
+
+    // 배송 정보 업데이트
+    order.setDeliveryDate(request.getDeliveryDate());
+    order.setDeliverySlot(request.getDeliverySlot());
+
+    // 주문 상태를 COMPLETED로 변경
     order.setStatus(Order.OrderStatus.COMPLETED);
   }
 

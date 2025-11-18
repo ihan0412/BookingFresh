@@ -36,7 +36,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->   // 인증, 인가 설정
                         auth
                                 .requestMatchers(
-                                        "/h2-console/",
+                                        "/h2-console/**",
                                         // 페이지 요청, 페이지 요청만 인증이 필요한 페이지도 등록
                                         "/signup",
                                         "/login",
@@ -49,7 +49,6 @@ public class WebSecurityConfig {
                                         "/api/auth/refresh",
                                         // 테스트를 위한 임시 api
                                         "/api/coupons/cart/item/coupon",
-                                        "/orders/create",
                                         "/products/*/like"
                                 ).permitAll()
                                 .requestMatchers(
@@ -70,6 +69,40 @@ public class WebSecurityConfig {
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
+                            // === 상품 관련 (GET만 허용) ===
+                            .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
+                            .requestMatchers("/products/*/like").authenticated() // 좋아요는 인증 필요
+
+                            // === 주문 관련 ===
+                            .requestMatchers(
+                                "/orders/create",           // POST - 주문 생성
+                                "/orders/*/complete",       // PATCH - 주문 완료
+                                "/orders/*/update-delivery", // PATCH - 배송 정보 수정
+                                "/orders/*/cancel",         // PATCH - 주문 취소
+                                "/orders/*",                // GET - 주문 조회
+                                "/orders/my"                // GET - 내 주문 목록
+                            ).authenticated() // 인증 필요
+
+                            // === 장바구니 관련 ===
+                            .requestMatchers("/api/cart/**").authenticated()
+
+                            // === 사용자 정보 관련 ===
+                            .requestMatchers("/api/me").authenticated()
+
+                            // === SSR 페이지 (조건부 렌더링) ===
+                            .requestMatchers(
+                                "/mypage", "/mypage/**",
+                                "/chat",
+                                "/ai",
+                                "/cart",
+                                "/products",
+                                "/",
+                                "/products/*",
+                                "/order/**"  // 주문 페이지
+                            ).permitAll() // 페이지 자체는 접근 가능 (RT 쿠키로 PageController에서 확인)
+
+                            // === 정적 리소스 ===
+                            .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                                 .anyRequest().authenticated()
 
                 )
