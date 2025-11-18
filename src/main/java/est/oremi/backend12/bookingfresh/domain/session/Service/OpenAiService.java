@@ -8,6 +8,7 @@ import com.openai.models.chat.completions.*;
 
 import est.oremi.backend12.bookingfresh.domain.session.dto.AiResponseData;
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.RecipeSchema;
+import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.SimplifiedRecipeSchema;
 import est.oremi.backend12.bookingfresh.domain.session.dto.responseSchema.SuggestionSchema;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import lombok.RequiredArgsConstructor;
@@ -26,33 +27,51 @@ public class OpenAiService {
     public AiResponseData formatAlanResponse(Message.IntentType intent, String aiRawText) {
 
         return switch (intent) {
-            case RECIPE_ASSISTANT -> parseRecipe(aiRawText);
-            case COOKING_IDEA -> parseSuggestion(aiRawText);
+            case RECIPE_ASSISTANT -> parseRecipeKeywords(aiRawText);
+//            case COOKING_IDEA -> parseSuggestion(aiRawText);
             default -> new AiResponseData("TEXT", null, aiRawText);
         };
     }
 
-    private AiResponseData parseRecipe(String rawText) {
+    private AiResponseData parseRecipeKeywords(String rawText) {
         try {
-            StructuredChatCompletionCreateParams<RecipeSchema> params =
+            String prompt =
+                    """
+                    입력된 문장에서 '요리에 필요한 재료 이름'만 추출해 주세요.
+    
+                    규칙:
+                    - 재료 이름만 반환 (예: "소고기", "대파", "표고버섯").
+                    - 양, 단위(ex: 300g, 2개) 제거.
+                    - 조미료/액체는 제외: 물, 간장, 설탕, 소금, 후추, 고춧가루, 식용유, 참기름, 다시마 등.
+                    - 복합 재료는 그대로 유지: "청양고추", "표고버섯", "소고기" 등.
+                    - steps, title, amount 등은 반환 금지.
+    
+                    JSON 형식:
+                    {
+                      "ingredients": ["재료1", "재료2"]
+                    }
+    
+                    아래 텍스트에서 재료를 추출하세요:
+    
+                    """ + rawText;
+
+            StructuredChatCompletionCreateParams<SimplifiedRecipeSchema> params =
                     ChatCompletionCreateParams.builder()
                             .model(ChatModel.GPT_4_1)
-                            .addUserMessage("다음 문장을 JSON 형태의 레시피 데이터로 변환해줘:\n" + rawText)
-                            .responseFormat(RecipeSchema.class)
+                            .addUserMessage(prompt)
+                            .responseFormat(SimplifiedRecipeSchema.class)
                             .build();
 
             // 모델 호출
-//            StructuredChatCompletion<RecipeSchema> completion =
-//                    openAiClient.chat().completions().create(params);
             var completion = openAiClient.chat().completions().create(params);
 
-
             // 구조화된 결과 추출
-            RecipeSchema recipe = completion.choices().get(0).message().content().orElse(null);;
+            SimplifiedRecipeSchema recipe =
+                    completion.choices().get(0).message().content().orElse(null);
+
             String json = new ObjectMapper().writeValueAsString(recipe);
 
             return new AiResponseData("RECIPE", json, rawText);
-
 
         } catch (Exception e) {
             log.error("[OpenAiService] parseRecipe() failed: {}", e.getMessage(), e);
@@ -60,33 +79,33 @@ public class OpenAiService {
         }
     }
 
-    private AiResponseData parseSuggestion(String rawText) {
-        try {
-            StructuredChatCompletionCreateParams<SuggestionSchema> params =
-                    ChatCompletionCreateParams.builder()
-                            .model(ChatModel.GPT_4_1)
-                            .addUserMessage(
-                                    "다음 내용을 참고해 요리 아이디어를 JSON으로 정리해줘.\n"
-                                            + "menus 필드에 추천 메뉴들을 배열로 담아주세요.\n"
-                                            + rawText
-                            )
-                            .responseFormat(SuggestionSchema.class)
-                            .build();
-
-            StructuredChatCompletion<SuggestionSchema> completion =
-                    openAiClient.chat().completions().create(params);
-
-            SuggestionSchema suggestion =
-                    completion.choices().get(0).message().content().orElse(null);;
-
-            String json = new ObjectMapper().writeValueAsString(suggestion);
-            return new AiResponseData("SUGGESTION", json, rawText);
-
-        } catch (Exception e) {
-            log.error("[OpenAiService] parseSuggestion() failed: {}", e.getMessage(), e);
-            return new AiResponseData("SUGGESTION", null, rawText);
-        }
-    }
+//    private AiResponseData parseSuggestion(String rawText) {
+//        try {
+//            StructuredChatCompletionCreateParams<SuggestionSchema> params =
+//                    ChatCompletionCreateParams.builder()
+//                            .model(ChatModel.GPT_4_1)
+//                            .addUserMessage(
+//                                    "다음 내용을 참고해 요리 아이디어를 JSON으로 정리해줘.\n"
+//                                            + "menus 필드에 추천 메뉴들을 배열로 담아주세요.\n"
+//                                            + rawText
+//                            )
+//                            .responseFormat(SuggestionSchema.class)
+//                            .build();
+//
+//            StructuredChatCompletion<SuggestionSchema> completion =
+//                    openAiClient.chat().completions().create(params);
+//
+//            SuggestionSchema suggestion =
+//                    completion.choices().get(0).message().content().orElse(null);;
+//
+//            String json = new ObjectMapper().writeValueAsString(suggestion);
+//            return new AiResponseData("SUGGESTION", json, rawText);
+//
+//        } catch (Exception e) {
+//            log.error("[OpenAiService] parseSuggestion() failed: {}", e.getMessage(), e);
+//            return new AiResponseData("SUGGESTION", null, rawText);
+//        }
+//    }
 
     public Message.IntentType getIntentFromMessage(String userMessage) {
         try {
@@ -97,9 +116,6 @@ public class OpenAiService {
                     예시:
                     입력: 감자조림 만드는 법 알려줘
                     출력: RECIPE_ASSISTANT
-                   \s
-                    입력: 오늘 뭐 먹을지 추천해줘
-                    출력: COOKING_IDEA
                    \s
                     입력: 안녕
                     출력: GENERAL_CHAT
@@ -112,7 +128,7 @@ public class OpenAiService {
                     ChatCompletionSystemMessageParam.builder()
                             .content("""
                                     너는 사용자의 메시지를 분석하여 'AI 요리 도우미'가 어떤 형태의 응답을 생성할지 예측하고,
-                                                그에 따라 아래 세 가지 의도 중 하나로 분류하는 분류기이다.
+                                                그에 따라 아래 두 가지 의도 중 하나로 분류하는 분류기이다.
                                    \s
                                                 각 의도는 다음 기준을 따른다:
                                    \s
@@ -121,17 +137,12 @@ public class OpenAiService {
                                                     - 예: "된장찌개 만드는 법 알려줘", "닭가슴살로 요리 추천해줘", "감자조림 레시피 알려줘"
                                                     - 앨런이 응답으로 **식재료 목록과 조리 순서**를 포함할 가능성이 높음
                                    \s
-                                                2. COOKING_IDEA:
-                                                    - 사용자가 요리 아이디어나 메뉴 제안, 식사 영감, 추천 요리를 묻는 경우
-                                                    - 예: "오늘 저녁 뭐 먹을까?", "다이어트 식단 아이디어 있어?", "집에 당근이 있는데 뭐 만들까?"
-                                                    - 앨런이 응답으로 **메뉴나 요리 아이디어, 조합 제안**을 줄 가능성이 높음
-                                   \s
-                                                3. GENERAL_CHAT:
+                                                2. GENERAL_CHAT:
                                                     - 요리와 직접 관련 없는 일반 대화, 혹은 잡담, 인사, 기타 정보 요청
                                                     - 예: "안녕", "오늘 날씨 어때?", "요리 말고 추천할만한 영화 있어?"
                                    \s
                                                 반드시 아래 ENUM 이름 중 하나만 정확히 출력해야 한다:
-                                                RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT
+                                                RECIPE_ASSISTANT, GENERAL_CHAT
                                    \s
                                                 설명, 이유, 기타 문장은 절대 출력하지 마라.
                        \s""")
