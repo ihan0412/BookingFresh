@@ -51,6 +51,24 @@ public class WebSecurityConfig {
                                         "/api/coupons/cart/item/coupon",
                                         "/products/*/like"
                                 ).permitAll()
+                                .requestMatchers(
+                                        // === Secure Pages (SSR) === 조건부 페이지 랜더링
+                                        // PageController가 RT 쿠키로 직접 보안 처리
+                                        "/mypage", "/mypage/**",
+                                        "/chat",
+                                        "/ai",
+                                        "/cart",
+                                        "/products", "/",
+                                        "/products/*", // 상품 상세 페이지
+                                        "/order/**"
+                                ).permitAll()
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html" //Swagger 관련 URL
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
+                                .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                             // === 상품 관련 (GET만 허용) ===
                             .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                             .requestMatchers("/products/*/like").authenticated() // 좋아요는 인증 필요
