@@ -20,7 +20,7 @@ import java.util.List;
 
 @Tag(
         name = "AI 서비스 API",
-        description = "BooKingFresh AI 세션,메시지,추천 api"
+        description = "BooKingFresh AI 세션,메시지,상품추천 api"
 )
 @RestController
 @RequiredArgsConstructor
