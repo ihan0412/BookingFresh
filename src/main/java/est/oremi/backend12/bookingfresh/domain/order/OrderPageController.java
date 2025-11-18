@@ -48,6 +48,7 @@ public class OrderPageController {
       return "redirect:/login";
     }
     model.addAttribute("orderId", orderId);
+    model.addAttribute("isLoggedIn", true);
     return "order"; // order.html
   }
 }

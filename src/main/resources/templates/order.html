@@ -1,145 +1,468 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>주문/결제</title>
-  <link rel="stylesheet" href="/css/order.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주문/결제 - Booking Fresh</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+  <link rel="stylesheet" th:href="@{/css/navbar.css}">
+
   <style>
+    /* 페이지 헤더 스타일 */
+    .page-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #00B992;
+    }
+    .page-header h2 {
+      color: #343a40;
+      font-weight: 700;
+    }
+
+    /* 주문 컨테이너 */
     .order-container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 24px;
-      border: 1px solid #ddd;
-      background-color: #f9f9f9;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 15px;
     }
+
+    /* 섹션 스타일 */
     .section {
-      margin-bottom: 32px;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e9ecef;
     }
-    .section h2 {
-      margin-bottom: 16px;
-      font-size: 20px;
+    .section h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #343a40;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #f8f9fa;
     }
+
+    /* 폼 그룹 스타일 */
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 1.25rem;
     }
     .form-group label {
       display: block;
-      font-weight: bold;
-      margin-bottom: 4px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #495057;
+      font-size: 0.95rem;
     }
-    .form-group input, .form-group textarea {
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
+      padding: 0.75rem;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.3s;
     }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #00B992;
+      box-shadow: 0 0 0 3px rgba(0, 185, 146, 0.1);
+    }
+
+    /* 배송 시간대 선택 */
+    .delivery-slot-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 0.75rem;
+    }
+    .slot-option {
+      position: relative;
+    }
+    .slot-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slot-label {
+      display: block;
+      padding: 1rem;
+      text-align: center;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      color: #495057;
+      background-color: #f8f9fa;
+    }
+    .slot-option input[type="radio"]:checked + .slot-label {
+      border-color: #00B992;
+      background-color: #e7f8f5;
+      color: #00B992;
+    }
+    .slot-label:hover {
+      border-color: #00B992;
+      background-color: #e7f8f5;
+    }
+    .slot-time {
+      display: block;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      color: #6c757d;
+      font-weight: 400;
+    }
+
+    /* 상품 리스트 */
     .product-list {
-      background-color: #fff;
-      padding: 16px;
-      border: 1px solid #ccc;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
     }
     .product-item {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #dee2e6;
     }
-    .total-price {
-      font-size: 18px;
-      font-weight: bold;
-      text-align: right;
-      margin-top: 16px;
+    .product-item:last-child {
+      border-bottom: none;
     }
+    .product-item-info {
+      flex: 1;
+    }
+    .product-name {
+      font-weight: 600;
+      color: #343a40;
+      margin-bottom: 4px;
+    }
+    .product-quantity {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .product-price {
+      font-weight: 700;
+      color: #00B992;
+      font-size: 1.1rem;
+    }
+
+    /* 가격 요약 */
+    .price-summary {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #dee2e6;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+    .price-row.total {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #00B992;
+      padding-top: 0.75rem;
+      border-top: 1px solid #dee2e6;
+    }
+
+    /* 주문하기 버튼 */
     .submit-button {
-      display: block;
       width: 100%;
-      padding: 12px;
-      background-color: #0078ff;
+      padding: 1rem;
+      background-color: #00B992;
       color: white;
-      font-size: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
       border: none;
+      border-radius: 8px;
       cursor: pointer;
-      margin-top: 24px;
+      transition: all 0.3s;
+      margin-top: 1.5rem;
+    }
+    .submit-button:hover {
+      background-color: #009977;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 185, 146, 0.3);
+    }
+    .submit-button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 날짜 입력 최소값 안내 */
+    .date-info {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
 <body>
 
-<!-- 헤더 fragment -->
-<th:block th:replace="fragments/header :: header"></th:block>
+<div th:replace="~{fragments/navbar :: headerFragment}"></div>
 
 <main class="order-container">
 
-  <!-- 배송지 / 구매자 정보 -->
+  <div class="page-header">
+    <h2>주문/결제</h2>
+  </div>
+
+  <!-- 배송지 정보 -->
   <section class="section">
-    <h2>배송지 / 구매자 정보</h2>
+    <h3>배송지 정보</h3>
 
     <div class="form-group">
-      <label for="address">주소</label>
+      <label for="address">주소 *</label>
       <input type="text" id="address" name="address" required>
     </div>
+
     <div class="form-group">
       <label for="detail">상세 주소</label>
       <input type="text" id="detail" name="detail">
     </div>
+
     <div class="form-group">
-      <label for="email">이메일</label>
-      <input type="email" id="email" name="email">
+      <label for="email">이메일 *</label>
+      <input type="email" id="email" name="email" required>
     </div>
 
-    <!-- 요청사항 -->
     <div class="form-group">
-      <label for="request">요청사항</label>
-      <textarea id="request" name="request" rows="3"></textarea>
+      <label for="request">배송 요청사항</label>
+      <textarea id="request" name="request" rows="3" placeholder="배송 시 요청사항을 입력해주세요"></textarea>
+    </div>
+  </section>
+
+  <!-- 배송 일정 선택 -->
+  <section class="section">
+    <h3>배송 일정 선택</h3>
+
+    <div class="form-group">
+      <label for="deliveryDate">배송 날짜 *</label>
+      <input type="date" id="deliveryDate" name="deliveryDate" required>
+      <div class="date-info">※ 주문일 기준 최소 1일 이후부터 선택 가능합니다</div>
     </div>
 
-    <!-- 상품 리스트 -->
-    <section class="section">
-      <h2>주문 상품</h2>
-      <div class="product-list">
-        <div class="product-item" th:each="item : ${orderItems}">
-          <span th:text="${item.name}">상품명</span>
+    <div class="form-group">
+      <label>배송 시간대 *</label>
+      <div class="delivery-slot-group">
+        <div class="slot-option">
+          <input type="radio" id="slot-dawn" name="deliverySlot" value="DAWN" required>
+          <label for="slot-dawn" class="slot-label">
+            새벽
+            <span class="slot-time">05:00 - 08:00</span>
+          </label>
         </div>
-      </div>
-      <div class="total-price" th:text="'총 결제 금액: ₩' + ${totalPrice}">총 결제 금액</div>
-    </section>
-
-    <!-- 주문하기 버튼 -->
-    <button id="submitOrderBtn" class="submit-button">주문하기</button>
-
-    <div id="orderSuccessModal" style="display:none;
-     position:fixed; top:0; left:0; width:100%; height:100%;
-     background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
-      <div style="background:#fff; padding:24px; border-radius:8px; text-align:center; max-width:300px;">
-        <h3>주문이 완료되었습니다!</h3>
-        <button id="confirmOrderBtn" style="margin-top:16px; padding:8px 16px;">확인</button>
+        <div class="slot-option">
+          <input type="radio" id="slot-morning" name="deliverySlot" value="MORNING">
+          <label for="slot-morning" class="slot-label">
+            오전
+            <span class="slot-time">09:00 - 12:00</span>
+          </label>
+        </div>
+        <div class="slot-option">
+          <input type="radio" id="slot-afternoon" name="deliverySlot" value="AFTERNOON">
+          <label for="slot-afternoon" class="slot-label">
+            오후
+            <span class="slot-time">13:00 - 18:00</span>
+          </label>
+        </div>
+        <div class="slot-option">
+          <input type="radio" id="slot-night" name="deliverySlot" value="NIGHT">
+          <label for="slot-night" class="slot-label">
+            저녁
+            <span class="slot-time">19:00 - 22:00</span>
+          </label>
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- 주문 상품 -->
+  <section class="section">
+    <h3>주문 상품</h3>
+    <div class="product-list" id="productList">
+      <!-- 상품 목록이 여기에 동적으로 로드됩니다 -->
+    </div>
+
+    <div class="price-summary">
+      <div class="price-row">
+        <span>상품 금액</span>
+        <span id="totalPrice">₩0</span>
+      </div>
+      <div class="price-row total">
+        <span>최종 결제 금액</span>
+        <span id="finalCost">₩0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 주문하기 버튼 -->
+  <button id="submitOrderBtn" class="submit-button">주문하기</button>
+
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" th:inline="javascript">
   import { fetchWithAuth } from '/js/common-api.js';
 
+  let orderData = null;
+
+  // 페이지 로드 시 실행
   document.addEventListener("DOMContentLoaded", async () => {
-    const orderId = [[${orderId}]]; // ✅ Thymeleaf 값 치환
-    const res = await fetchWithAuth(`/orders/${orderId}`, { method: "GET" });
-    if (res.ok) {
-      const order = await res.json();
-      document.querySelector(".product-list").innerHTML =
-          order.items.map(item => `<div>${item.name} x ${item.quantity}</div>`).join("");
-      document.querySelector(".total-price").textContent =
-          `총 결제 금액: ₩${order.finalCost}`;
+    try {
+      // 주문 ID 가져오기 (Thymeleaf에서 전달)
+      const orderId = [[${orderId}]];
+
+      // 1. 주문 정보 로드
+      const orderRes = await fetchWithAuth(`/orders/${orderId}`, { method: "GET" });
+      if (orderRes.ok) {
+        orderData = await orderRes.json();
+        displayOrderItems(orderData);
+
+        // 주문 정보에서 배송 날짜와 시간대 초기값 설정 (이미 설정된 경우)
+        if (orderData.deliveryDate) {
+          document.getElementById("deliveryDate").value = orderData.deliveryDate;
+        }
+        if (orderData.deliverySlot) {
+          const slotRadio = document.querySelector(`input[value="${orderData.deliverySlot}"]`);
+          if (slotRadio) slotRadio.checked = true;
+        }
+      } else {
+        alert("주문 정보를 불러올 수 없습니다.");
+        window.location.href = "/cart";
+        return;
+      }
+
+      // 2. 사용자 정보 로드 (Consumer 정보)
+      const consumerRes = await fetchWithAuth("/api/me", { method: "GET" });
+      if (consumerRes.ok) {
+        const consumer = await consumerRes.json();
+        // 초기값 채우기
+        document.getElementById("address").value = consumer.address || "";
+        document.getElementById("detail").value = consumer.detailAddress || "";
+        document.getElementById("email").value = consumer.email || "";
+      }
+
+      // 3. 배송 날짜 최소값 설정 (주문일 +1일)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const minDate = tomorrow.toISOString().split('T')[0];
+      document.getElementById("deliveryDate").setAttribute("min", minDate);
+
+    } catch (err) {
+      console.error("초기화 오류:", err);
+      alert("세션 만료. 다시 로그인해주세요.");
+      window.location.href = "/login";
     }
   });
 
+  // 주문 상품 목록 표시
+  function displayOrderItems(order) {
+    const productList = document.getElementById("productList");
+
+    productList.innerHTML = order.items.map(item => `
+      <div class="product-item">
+        <div class="product-item-info">
+          <div class="product-name">${item.productName}</div>
+          <div class="product-quantity">수량: ${item.quantity}개</div>
+        </div>
+        <div class="product-price">₩${item.price.toLocaleString()}</div>
+      </div>
+    `).join("");
+
+    // 가격 정보 표시
+    document.getElementById("totalPrice").textContent = `₩${order.totalPrice.toLocaleString()}`;
+    document.getElementById("finalCost").textContent = `₩${order.finalCost.toLocaleString()}`;
+  }
+
+  // 주문하기 버튼 클릭
   document.getElementById("submitOrderBtn").addEventListener("click", async () => {
-    const orderId = [[${orderId}]]; // ✅ 동일하게 치환
-    const res = await fetchWithAuth(`/orders/${orderId}/complete`, { method: "PATCH" });
-    if (res.ok) {
-      document.getElementById("orderSuccessModal").style.display = "flex";
-    }
-  });
+    try {
+      // orderId는 이미 위에서 선언됨 - 재선언 불필요
 
-  document.getElementById("confirmOrderBtn").addEventListener("click", () => {
-    window.location.href = "/index";
+      // 입력값 검증
+      const address = document.getElementById("address").value.trim();
+      const detail = document.getElementById("detail").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const request = document.getElementById("request").value.trim();
+      const deliveryDate = document.getElementById("deliveryDate").value;
+      const deliverySlot = document.querySelector('input[name="deliverySlot"]:checked');
+
+      if (!address || !email) {
+        alert("주소와 이메일은 필수 입력 항목입니다.");
+        return;
+      }
+
+      if (!deliveryDate) {
+        alert("배송 날짜를 선택해주세요.");
+        return;
+      }
+
+      if (!deliverySlot) {
+        alert("배송 시간대를 선택해주세요.");
+        return;
+      }
+
+      // 날짜 유효성 검사
+      const selectedDate = new Date(deliveryDate);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate < tomorrow) {
+        alert("배송 날짜는 최소 내일 이후로 선택해야 합니다.");
+        return;
+      }
+
+      // 버튼 비활성화
+      const submitBtn = document.getElementById("submitOrderBtn");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "주문 처리 중...";
+
+      // 주문 완료 요청 데이터 (배송 정보 포함)
+      const orderCompleteData = {
+        address: address,
+        detailAddress: detail,
+        email: email,
+        request: request,
+        deliveryDate: deliveryDate,
+        deliverySlot: deliverySlot.value
+      };
+
+      // 주문 완료 API 호출 (배송 정보 포함)
+      const response = await fetchWithAuth(`/orders/${orderData.orderId}/complete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(orderCompleteData)
+      });
+
+      if (response.ok) {
+        alert("주문이 완료되었습니다!");
+        window.location.href = "/";
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText || "주문 완료 처리 실패");
+      }
+
+    } catch (err) {
+      console.error("주문 오류:", err);
+      alert("주문 처리 중 오류가 발생했습니다: " + err.message);
+      document.getElementById("submitOrderBtn").disabled = false;
+      document.getElementById("submitOrderBtn").textContent = "주문하기";
+    }
   });
 </script>
 
