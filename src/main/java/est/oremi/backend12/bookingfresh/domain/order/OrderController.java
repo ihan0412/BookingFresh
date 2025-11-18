@@ -25,12 +25,16 @@ public class OrderController {
 
   private final OrderService orderService;
 
-  // 주문 생성
+  // 주문 생성 (JWT에서 consumerId 추출)
   @PostMapping("/create")
-  public ResponseEntity<OrderDto> createOrder(@RequestParam Long consumerId,
+  public ResponseEntity<OrderDto> createOrder(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestParam boolean isReservation,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deliveryDate,
-      @RequestParam(required = false) DeliverySlot deliverySlot) {
+      @RequestParam(required = false) Order.DeliverySlot deliverySlot) {
+
+    Long consumerId = userDetails.getId(); //JWT에서 추출
+
     Long orderId = orderService.createOrder(consumerId, deliveryDate, deliverySlot, isReservation);
     OrderDto orderDto = orderService.getOrder(orderId);
     return ResponseEntity.ok(orderDto);
@@ -49,14 +53,18 @@ public class OrderController {
     orderService.cancelOrder(orderId);
     return ResponseEntity.ok().build();
   }
+  @PatchMapping("/{orderId}/complete")
+  public ResponseEntity<Void> completeOrder(@PathVariable Long orderId) {
+    orderService.completeOrder(orderId);
+    return ResponseEntity.ok().build();
+  }
 
-  // 모든 주문 조회
+  // 내 모든 주문 조회 (JWT 기반)
   @GetMapping("/my")
   public ResponseEntity<List<OrderDto>> getConsumerOrders(
-          @AuthenticationPrincipal CustomUserDetails userDetails) {
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     Long consumerId = userDetails.getId();
-
     List<OrderDto> orders = orderService.getOrdersByConsumerId(consumerId);
     return ResponseEntity.ok(orders);
   }

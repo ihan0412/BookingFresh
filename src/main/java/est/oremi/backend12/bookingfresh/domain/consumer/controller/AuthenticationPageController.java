@@ -2,10 +2,8 @@ package est.oremi.backend12.bookingfresh.domain.consumer.controller;
 
 import est.oremi.backend12.bookingfresh.domain.consumer.dto.AddConsumerRequest;
 import est.oremi.backend12.bookingfresh.domain.consumer.dto.LoginRequest;
-import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -135,5 +133,13 @@ public class AuthenticationPageController {
         }
         return false;
     }
+
+/*    @GetMapping("/mypage/wishlist")
+    public String mypageWishlist() { // (★ request, model, 수동 체크 모두 제거)
+        // (★) 뷰가 sec:authorize로 직접 처리
+        return "mypage/wishlist";
+        // 이렇게 구현해보려 했는데, 결론적으로는 웹 스토리지에 저장하는
+        // AT를 어떻게 바로 불러올 방법이 없어서 조건부 랜더링을 구현하려면 더 많은 코드가 필요해서 일단 익순한 방법으로 진행
+    }*/
 
 }

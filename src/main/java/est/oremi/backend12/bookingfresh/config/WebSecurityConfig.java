@@ -4,6 +4,7 @@ import est.oremi.backend12.bookingfresh.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -35,6 +36,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->   // 인증, 인가 설정
                         auth
                                 .requestMatchers(
+                                        "/h2-console/",
                                         // 페이지 요청, 페이지 요청만 인증이 필요한 페이지도 등록
                                         "/signup",
                                         "/login",
@@ -45,29 +47,23 @@ public class WebSecurityConfig {
                                         "/api/login",     // POST /api/login (로그인 처리)
                                         // 토큰 재발급 처리,이미 AT 가 만료된 상황이기 때문에 인증 처리 없이 permit
                                         "/api/auth/refresh",
-                                        //"/api/auth/logout",
-                                        //"/api/coupons",
                                         // 테스트를 위한 임시 api
-                                        "/cart/add",
                                         "/api/coupons/cart/item/coupon",
-                                        "/orders/create"
-                                        // "/api/me", // 개인정보 수정
-                                        //"/api/coupons/consumer/*", // 사용자 쿠폰 조회
-                                        //"/api/coupons/available/*/consumer/*/prices", // 상품 적용 가능 쿠폰 조회 + 적용 가격 포함
-                                        // "/api/coupons/available/*/consumer/*", // 상품 적용 가능 쿠폰 조회, /api/coupons/available/{productId}/consumer/{consumerId}
-
+                                        "/orders/create",
+                                        "/products/*/like"
                                 ).permitAll()
                                 .requestMatchers(
-                                        // === Secure Pages (SSR) === , 서버에서 사용자 인증, 깜빡임 없는 사용자 인증
+                                        // === Secure Pages (SSR) === 조건부 페이지 랜더링
                                         // PageController가 RT 쿠키로 직접 보안 처리
                                         "/mypage", "/mypage/**",
-                                        "/chat",  // chat.html 페이지
-                                        "/ai",     // AIPageController
-                                        "cart",
-                                        "/", // 리다이랙트
-                                        "/products",
-                                        "/products/*" // 상품 상세 페이지
+                                        "/chat",
+                                        "/ai",
+                                        "/cart",
+                                        "/products", "/",
+                                        "/products/*", // 상품 상세 페이지
+                                        "/order/**"
                                 ).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                                 .anyRequest().authenticated()
 
