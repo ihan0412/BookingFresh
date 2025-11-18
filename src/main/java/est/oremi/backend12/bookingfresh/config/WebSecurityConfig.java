@@ -63,6 +63,11 @@ public class WebSecurityConfig {
                                         "/products/*", // 상품 상세 페이지
                                         "/order/**"
                                 ).permitAll()
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html" //Swagger 관련 URL
+                                ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                                 .requestMatchers("/static/**", "/css/**", "/js/**").permitAll() // 정적 리소스 접근 가능하게
                                 .anyRequest().authenticated()
