@@ -9,6 +9,7 @@ import est.oremi.backend12.bookingfresh.domain.session.dto.*;
 import est.oremi.backend12.bookingfresh.domain.session.entity.AiRecommendation;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Message;
 import est.oremi.backend12.bookingfresh.domain.session.entity.Session;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+@Tag(
+        name = "AI 서비스 API",
+        description = "BooKingFresh AI 세션,메시지,추천 api"
+)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/ai")
