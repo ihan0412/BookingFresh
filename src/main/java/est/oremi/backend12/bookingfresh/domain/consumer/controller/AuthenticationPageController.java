@@ -41,22 +41,15 @@ public class AuthenticationPageController {
 
         return "authentication/login";
     }
-    
 
-
-    // 2. 마이페이지 (/mypage)
+    // 마이페이지 (/mypage)
     @GetMapping("/mypage")
     public String myPage(HttpServletRequest request, Model model) {
-
-        // 1. RT 쿠키를 확인하여 로그인 상태를 가져옵니다.
         boolean loggedIn = isLoggedIn(request);
-
-        // 2. (★핵심★) 로그인 되어있지 않다면
         if (!loggedIn) {
-            return "redirect:/login"; // 3. 로그인 페이지로 리다이렉트
+            return "redirect:/login";
         }
-
-        // 4. 로그인 되어있다면, 모델에 상태를 담고 페이지 렌더링
+        // 로그인 되어있다면, 모델에 상태를 담고 페이지 렌더링
         model.addAttribute("isLoggedIn", true);
         return "mypage/mypage";
     }
@@ -66,7 +59,7 @@ public class AuthenticationPageController {
 
         boolean loggedIn = isLoggedIn(request);
         if (!loggedIn) {
-            return "redirect:/login"; // (★) 리다이렉트
+            return "redirect:/login";
         }
 
         model.addAttribute("isLoggedIn", true);
@@ -78,7 +71,7 @@ public class AuthenticationPageController {
 
         boolean loggedIn = isLoggedIn(request);
         if (!loggedIn) {
-            return "redirect:/login"; // (★) 리다이렉트
+            return "redirect:/login";
         }
 
         model.addAttribute("isLoggedIn", true);
@@ -90,32 +83,31 @@ public class AuthenticationPageController {
 
         boolean loggedIn = isLoggedIn(request);
         if (!loggedIn) {
-            return "redirect:/login"; // (★) 리다이렉트
+            return "redirect:/login";
         }
 
         model.addAttribute("isLoggedIn", true);
         return "mypage/wishlist";
     }
 
-    // 3. 주문 상세 페이지 (/mypage/orders/{orderId})
+    // 주문 상세 페이지
     @GetMapping("/mypage/orders/{orderId}")
     public String orderDetailPage(
-            @PathVariable Long orderId, // (1) URL의 orderId를 받음
+            @PathVariable Long orderId,
             HttpServletRequest request,
             Model model) {
 
-        // (2) 비로그인 시 리다이렉트
+        // 비로그인 시 리다이렉트
         boolean loggedIn = isLoggedIn(request);
         if (!loggedIn) {
             return "redirect:/login";
         }
 
-        // (3) 모델에 로그인 상태와 주문 ID 추가 (필요시)
+        //  모델에 로그인 상태와 주문 ID 추가
         model.addAttribute("isLoggedIn", true);
-        model.addAttribute("orderId", orderId); // (JS가 URL을 파싱하지만, 만약을 대비해 추가)
+        model.addAttribute("orderId", orderId);
 
-        // (4) "mypage/order-detail.html" 템플릿 반환
-        // (order-detail.html 파일이 templates/mypage/ 폴더 안에 있어야 합니다)
+
         return "mypage/order-detail";
     }
 
@@ -124,7 +116,6 @@ public class AuthenticationPageController {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("refreshToken".equals(cookie.getName())) {
-                    // 쿠키가 존재하면 true 반환
                     return true;
                 }
             }
@@ -133,8 +124,7 @@ public class AuthenticationPageController {
     }
 
 /*    @GetMapping("/mypage/wishlist")
-    public String mypageWishlist() { // (★ request, model, 수동 체크 모두 제거)
-        // (★) 뷰가 sec:authorize로 직접 처리
+    public String mypageWishlist() {
         return "mypage/wishlist";
         // 이렇게 구현해보려 했는데, 결론적으로는 웹 스토리지에 저장하는
         // AT를 어떻게 바로 불러올 방법이 없어서 조건부 랜더링을 구현하려면 더 많은 코드가 필요해서 일단 익순한 방법으로 진행

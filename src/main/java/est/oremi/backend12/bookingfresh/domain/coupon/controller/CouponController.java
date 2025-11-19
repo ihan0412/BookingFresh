@@ -1,12 +1,13 @@
 package est.oremi.backend12.bookingfresh.domain.coupon.controller;
 
-import com.sun.security.auth.UserPrincipal;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.CustomUserDetails;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.dto.*;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CartCouponService;
 import est.oremi.backend12.bookingfresh.domain.coupon.service.CouponService;
 import est.oremi.backend12.bookingfresh.exception.NotFoundException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+@Tag(
+        name = "쿠폰 생성, 조회, 상태변경 API",
+        description = "카테고리, 상품에 적용 가능한 쿠폰을 조회하거나, 사용자 회원가입 시에 쿠폰을 발급하는 API"
+)
 @RestController
 @RequestMapping("/api/coupons")
 @RequiredArgsConstructor
@@ -25,7 +31,7 @@ public class CouponController {
     private final CouponService couponService;
     private final CartCouponService cartCouponService;
 
-    // 새로운 쿠폰을 등록하고 사용자에게 비동기 발급
+    @Operation(summary = "새로운 쿠폰 등록",description = "새로운 쿠폰을 등록하고 사용자에게 비동기 발급 - API 로만 동작")
     @PostMapping
     public ResponseEntity<Map<String, Object>> registerCoupon(@RequestBody CouponRegistrationRequest request) {
 
@@ -48,15 +54,14 @@ public class CouponController {
         }
     }
 
-    // 쿠폰과 쿠폰이 적용 가능한 모든 카테고리 조회
+    @Operation(summary = "쿠폰 목록 조회",description = "쿠폰과 쿠폰이 적용 가능한 모든 카테고리 조회")
     @GetMapping
     public ResponseEntity<List<CouponResponse>> getAllCoupons() {
         List<CouponResponse> response = couponService.findAllCouponsWithCategories();
-        // 모든 쿠폰과 그에 따른 카테고리 매핑 정보를 반환
         return ResponseEntity.ok(response);
     }
 
-    // 사용자가 소유한 쿠폰 조회
+    @Operation(summary = "사용자 쿠폰 조회",description = "사용자가 소유한 모든 쿠폰 조회")
     @GetMapping("/my")
     public ResponseEntity<List<UserCouponResponse>> getAvailableUserCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -71,6 +76,7 @@ public class CouponController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "상품에 대한 쿠폰 조회",description = "사용자가 소유하고, 상품을 대상으로 적용 가능한(카테고리가 일치하는) 쿠폰 조회")
     @GetMapping("/applicable-to/{productId}")
     public ResponseEntity<List<UserCouponProductResponse>> getApplicableUserCouponsWithPrice(
             @PathVariable Long productId,
@@ -86,7 +92,8 @@ public class CouponController {
 
         return ResponseEntity.ok(response);
     }
-    // 장바구니 항목에 쿠폰을 예약/해제하고, isApplied 상태를 업데이트
+
+    @Operation(summary = "쿠폰의 상태 변경",description = "장바구니의 상품에 쿠폰을 적용(상태 변경)")
     @PatchMapping("/cart/item/coupon")
     public ResponseEntity<String> toggleCartItemCoupon(
             @RequestBody CouponCartItemRequest request,
