@@ -8,6 +8,7 @@ import est.oremi.backend12.bookingfresh.domain.product.Product;
 import est.oremi.backend12.bookingfresh.domain.product.ProductRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -74,8 +75,16 @@ public class CartService {
   @Transactional
   public CartDto getCart(Long consumerId) {
     Cart cart = cartRepository.findByConsumerId(consumerId)
-        .orElseThrow(() -> new IllegalArgumentException("장바구니 없음"));
+        .orElse(null);
 
+    // 장바구니가 없으면 빈 DTO 반환
+    if (cart == null || cart.getItems().isEmpty()) {
+      return new CartDto(
+          Collections.emptyList(),  // 빈 상품 목록
+          0,                         // 총 개수 0
+          BigDecimal.ZERO            // 총 금액 0
+      );
+    }
     List<CartItemDto> items = cart.getItems().stream()
         .map(item -> {
           Product p = item.getProduct();
