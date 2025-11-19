@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CartItemDetailResponse {
 
-    private Long cartItemId;  // (★) 핵심: 쿠폰 적용을 위한 PK
+    private Long cartItemId;  // 쿠폰 적용을 위한 PK
 
     private Long productId;
     private String name;
@@ -21,7 +21,6 @@ public class CartItemDetailResponse {
     private BigDecimal lineTotal;     // 원가 합계
     private String photoUrl;
 
-    // (★) 추가된 쿠폰 관련 필드
     private BigDecimal priceAfterDiscount; // 쿠폰 적용 후 단가
     private AppliedCouponInfo appliedCoupon; // 적용된 쿠폰 정보
 

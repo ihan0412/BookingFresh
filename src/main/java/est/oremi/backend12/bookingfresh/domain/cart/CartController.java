@@ -75,7 +75,8 @@ public class CartController {
     return ResponseEntity.ok().build();
   }
 
-  // (★ NEW) 장바구니 페이지용 상세 조회 (쿠폰 포함)
+  //  장바구니 페이지용 상세 조회
+  @Operation(summary = "장바구니 세부 조회",description = "로그인된 사용자의 장바구니를 장바구니 ID, 장바구니 목록 ID, 상품 ID 를 조회합니다.")
   @GetMapping("/detail")
   public ResponseEntity<CartDetailResponse> getCartDetails(@AuthenticationPrincipal CustomUserDetails user) {
     Long consumerId = user.getId();

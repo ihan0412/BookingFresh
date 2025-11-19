@@ -14,37 +14,35 @@ import org.springframework.ui.Model;
 @RequestMapping
 public class AuthenticationPageController {
 
+    // 리다이랙트 컨트롤러
+    @GetMapping("/home")
+    public String homeRedirect() {
+        return "redirect:/products";
+    }
+
+    @GetMapping("/")
+    public String rootRedirect() {
+        return "redirect:/products";
+    }
+
     @GetMapping("/signup")
-    public String signUpPage(Model model, HttpServletRequest request) { // request는 제거해도 무방
+    public String signUpPage(Model model, HttpServletRequest request) {
         model.addAttribute("consumerRequest", new AddConsumerRequest());
-        // (수정) 쿠키 확인 없이 항상 false
         model.addAttribute("isLoggedIn", false);
+
         return "authentication/signup";
     }
 
     // 로그인 페이지
     @GetMapping("/login")
-    public String loginPage(Model model, HttpServletRequest request) { // request는 제거해도 무방
+    public String loginPage(Model model, HttpServletRequest request) {
         model.addAttribute("loginRequest", new LoginRequest());
-        // (수정) 쿠키 확인 없이 항상 false
         model.addAttribute("isLoggedIn", false);
+
         return "authentication/login";
     }
-
-/*    @GetMapping("/home") // (★ 이 부분이 빠져있었습니다 ★)
-    public String homePage(HttpServletRequest request, Model model) {
-        model.addAttribute("isLoggedIn", isLoggedIn(request)); // (정상)
-        return "home";
-    }*/
     
-    @GetMapping("/home")
-    public String homeRedirect() {
-        return "redirect:/products";
-    }
-    @GetMapping("/")
-    public String rootRedirect() {
-        return "redirect:/products";
-    }
+
 
     // 2. 마이페이지 (/mypage)
     @GetMapping("/mypage")

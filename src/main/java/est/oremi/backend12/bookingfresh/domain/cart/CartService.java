@@ -123,7 +123,7 @@ public class CartService {
     cartRepository.save(cart);
   }
 
-  // (★ NEW) 쿠폰 정보가 포함된 장바구니 상세 조회
+  // 쿠폰 정보가 포함된 장바구니 상세 조회 -> 쿠폰 정보를 알아야 최종 금액 산출 가능
   @Transactional
   public CartDetailResponse getCartDetails(Long consumerId) {
     Cart cart = cartRepository.findByConsumerId(consumerId).orElse(null);
@@ -143,7 +143,7 @@ public class CartService {
     List<CartItemDetailResponse> items = cart.getItems().stream()
             .map(item -> {
               Product p = item.getProduct();
-              UserCoupon userCoupon = item.getUserCoupon(); // (★) CartItem 엔티티에 getUserCoupon() 필요
+              UserCoupon userCoupon = item.getUserCoupon();
 
               BigDecimal originalPrice = p.getPrice();
               BigDecimal lineTotal = originalPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
@@ -155,14 +155,14 @@ public class CartService {
               if (userCoupon != null && userCoupon.getIsApplied()) {
                 Coupon coupon = userCoupon.getCoupon();
                 couponInfo = new CartItemDetailResponse.AppliedCouponInfo(userCoupon.getId(), coupon.getName());
-                discountedPrice = calculateDiscountedPrice(originalPrice, coupon); // (★) 아래 헬퍼 메서드 참고
+                discountedPrice = calculateDiscountedPrice(originalPrice, coupon);
               }
 
               return CartItemDetailResponse.builder()
-                      .cartItemId(item.getId()) // (★) 여기가 핵심!
+                      .cartItemId(item.getId())
                       .productId(p.getId())
                       .name(p.getName())
-                      .weightPieces(p.getWeight_pieces()) // getter 이름 확인 필요
+                      .weightPieces(p.getWeight_pieces())
                       .quantity(item.getQuantity())
                       .price(originalPrice)
                       .lineTotal(lineTotal)
@@ -193,7 +193,7 @@ public class CartService {
             .build();
   }
 
-  // (★) 쿠폰 가격 계산 헬퍼 메서드 (Service 내부에 추가)
+  // 쿠폰 가격 계산 헬퍼 메서드
   private BigDecimal calculateDiscountedPrice(BigDecimal originalPrice, Coupon coupon) {
     // Coupon 엔티티의 getDiscountValue()가 String인지 BigDecimal인지에 따라 변환 필요
     BigDecimal discountVal = new BigDecimal(coupon.getDiscountValue());
