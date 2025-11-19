@@ -4,6 +4,10 @@ import est.oremi.backend12.bookingfresh.domain.cart.dto.CartDto;
 import est.oremi.backend12.bookingfresh.domain.cart.dto.CartItemDto;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
 import est.oremi.backend12.bookingfresh.domain.consumer.repository.ConsumerRepository;
+import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
+import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.CartDetailResponse;
+import est.oremi.backend12.bookingfresh.domain.coupon.dto.CartItemDetailResponse;
 import est.oremi.backend12.bookingfresh.domain.product.Product;
 import est.oremi.backend12.bookingfresh.domain.product.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -117,6 +121,91 @@ public class CartService {
 
     cart.clear();
     cartRepository.save(cart);
+  }
+
+  // (★ NEW) 쿠폰 정보가 포함된 장바구니 상세 조회
+  @Transactional
+  public CartDetailResponse getCartDetails(Long consumerId) {
+    Cart cart = cartRepository.findByConsumerId(consumerId).orElse(null);
+
+    // 장바구니가 비어있을 때
+    if (cart == null || cart.getItems().isEmpty()) {
+      return CartDetailResponse.builder()
+              .items(Collections.emptyList())
+              .totalQuantity(0)
+              .totalAmount(BigDecimal.ZERO)
+              .totalDiscount(BigDecimal.ZERO)
+              .finalAmount(BigDecimal.ZERO)
+              .build();
+    }
+
+    // 아이템 변환 로직
+    List<CartItemDetailResponse> items = cart.getItems().stream()
+            .map(item -> {
+              Product p = item.getProduct();
+              UserCoupon userCoupon = item.getUserCoupon(); // (★) CartItem 엔티티에 getUserCoupon() 필요
+
+              BigDecimal originalPrice = p.getPrice();
+              BigDecimal lineTotal = originalPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+
+              // 쿠폰 할인 계산
+              BigDecimal discountedPrice = originalPrice;
+              CartItemDetailResponse.AppliedCouponInfo couponInfo = null;
+
+              if (userCoupon != null && userCoupon.getIsApplied()) {
+                Coupon coupon = userCoupon.getCoupon();
+                couponInfo = new CartItemDetailResponse.AppliedCouponInfo(userCoupon.getId(), coupon.getName());
+                discountedPrice = calculateDiscountedPrice(originalPrice, coupon); // (★) 아래 헬퍼 메서드 참고
+              }
+
+              return CartItemDetailResponse.builder()
+                      .cartItemId(item.getId()) // (★) 여기가 핵심!
+                      .productId(p.getId())
+                      .name(p.getName())
+                      .weightPieces(p.getWeight_pieces()) // getter 이름 확인 필요
+                      .quantity(item.getQuantity())
+                      .price(originalPrice)
+                      .lineTotal(lineTotal)
+                      .photoUrl(p.getPhotoUrl())
+                      .priceAfterDiscount(discountedPrice)
+                      .appliedCoupon(couponInfo)
+                      .build();
+            })
+            .toList();
+
+    // 전체 합계 계산
+    BigDecimal totalAmount = items.stream()
+            .map(CartItemDetailResponse::getLineTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal finalAmount = items.stream()
+            .map(i -> i.getPriceAfterDiscount().multiply(BigDecimal.valueOf(i.getQuantity())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal totalDiscount = totalAmount.subtract(finalAmount);
+
+    return CartDetailResponse.builder()
+            .items(items)
+            .totalQuantity(cart.getItems().stream().mapToInt(CartItem::getQuantity).sum())
+            .totalAmount(totalAmount)
+            .totalDiscount(totalDiscount)
+            .finalAmount(finalAmount)
+            .build();
+  }
+
+  // (★) 쿠폰 가격 계산 헬퍼 메서드 (Service 내부에 추가)
+  private BigDecimal calculateDiscountedPrice(BigDecimal originalPrice, Coupon coupon) {
+    // Coupon 엔티티의 getDiscountValue()가 String인지 BigDecimal인지에 따라 변환 필요
+    BigDecimal discountVal = new BigDecimal(coupon.getDiscountValue());
+
+    if ("PERCENT".equalsIgnoreCase(coupon.getDiscountType())) {
+      BigDecimal rate = discountVal.divide(BigDecimal.valueOf(100));
+      BigDecimal discountAmount = originalPrice.multiply(rate);
+      return originalPrice.subtract(discountAmount);
+    } else {
+      // 정액 할인
+      return originalPrice.subtract(discountVal).max(BigDecimal.ZERO);
+    }
   }
 }
 
