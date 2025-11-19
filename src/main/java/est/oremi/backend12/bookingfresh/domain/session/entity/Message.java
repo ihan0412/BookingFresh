@@ -51,7 +51,9 @@ public class Message {
         USER, AI
     }
     public enum IntentType{
-        RECIPE_ASSISTANT, COOKING_IDEA, GENERAL_CHAT
+        RECIPE_ASSISTANT,
+//        COOKING_IDEA,
+        GENERAL_CHAT
     }
     public enum StructuredType {
         RECIPE, SUGGESTION, TEXT

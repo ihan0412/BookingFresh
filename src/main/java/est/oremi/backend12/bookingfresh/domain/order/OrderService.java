@@ -5,6 +5,7 @@ import est.oremi.backend12.bookingfresh.domain.cart.CartItem;
 import est.oremi.backend12.bookingfresh.domain.cart.CartItemRepository;
 import est.oremi.backend12.bookingfresh.domain.cart.CartRepository;
 import est.oremi.backend12.bookingfresh.domain.consumer.entity.Consumer;
+import est.oremi.backend12.bookingfresh.domain.mail.MailService;
 import est.oremi.backend12.bookingfresh.domain.order.Order.DeliverySlot;
 import est.oremi.backend12.bookingfresh.domain.coupon.Coupon;
 import est.oremi.backend12.bookingfresh.domain.coupon.UserCoupon;
@@ -32,6 +33,7 @@ public class OrderService {
   private final CartRepository cartRepository;
   private final OrderRepository orderRepository;
   private final CartItemRepository cartItemRepository;
+  private final MailService mailService;
 
 
   //주문 생성
@@ -244,6 +246,15 @@ public class OrderService {
 
     // 주문 상태를 COMPLETED로 변경
     order.setStatus(Order.OrderStatus.COMPLETED);
+
+      mailService.sendOrderConfirmationMail(
+              order.getConsumer().getEmail(),
+              order.getConsumer().getNickname(),
+              consumerId,
+              orderId,
+              order.getDeliveryDate(),
+              order.getDeliverySlot()
+      );
   }
 
   // OrderService에 추가 필요

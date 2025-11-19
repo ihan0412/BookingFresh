@@ -62,8 +62,7 @@ dependencies {
     // AI
     // ===================================
     implementation 'org.springframework.boot:spring-boot-starter-webflux'  // Alan API 통신
-//    implementation 'com.openai:openai-java:4.6.1'                          // OpenAI SDK
-    implementation 'com.openai:openai-java:4.7.1'
+    implementation 'com.openai:openai-java:4.7.1'                           // OpenAI SDK
     implementation 'com.fasterxml.jackson.core:jackson-databind'            // JSON 파싱
     implementation 'com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations'
 
@@ -82,6 +81,8 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+    // OpenAPI 문서화
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 }
 
 
