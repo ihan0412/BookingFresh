@@ -323,8 +323,6 @@
     });
   }
 
-  // --- [핵심] 쿠폰 관련 로직 ---
-
   // 쿠폰 모달 열기
   async function openCouponModal(productId, cartItemId) {
     currentCartItemId = cartItemId;
@@ -352,7 +350,7 @@
     const listContainer = document.getElementById("modal-coupon-list");
     let html = '';
 
-    // 1. "쿠폰 적용 해제" 옵션 (항상 맨 위에)
+    // "쿠폰 적용 해제" 옵션
     html += `
             <a href="#" class="list-group-item list-group-item-action list-group-item-warning d-flex justify-content-between align-items-center"
                onclick="applyCoupon(null); return false;">
@@ -367,15 +365,11 @@
     if (!coupons || coupons.length === 0) {
       html += `<div class="p-3 text-center text-muted">적용 가능한 쿠폰이 없습니다.</div>`;
     } else {
-      // 2. 쿠폰 목록
+      // 쿠폰 목록
       html += coupons.map(c => {
-        // DTO 필드: UserCouponProductResponse.java 참고
         const discountAmt = parseCurrency(c.calculatedDiscountAmount);
         const finalPrice = parseCurrency(c.finalPriceAfterDiscount);
         const alreadyUsed = c.isUsed;
-        // 다른 아이템에 적용중인 경우 (isApplied=true) -> CartCouponService에서 체크함
-        // 하지만 여기서는 '현재 아이템'에 적용된건지 '다른 아이템'에 적용된건지 구분이 필요할 수 있음.
-        // 일단 API가 "적용 가능한" 목록을 준다고 가정하되, 이미 적용된건 표시.
 
         let statusBadge = '';
         if (c.isApplied) statusBadge = '<span class="badge bg-secondary ms-2">다른 상품에 적용중</span>';
@@ -397,13 +391,12 @@
     listContainer.innerHTML = html;
   }
 
-  // 쿠폰 적용 API 호출 (전역 함수로 등록하여 onclick에서 사용)
+  // 쿠폰 적용 API 호출
   window.applyCoupon = async (userCouponId) => {
     if (!currentCartItemId) return;
 
     const actionName = userCouponId ? "적용" : "해제";
 
-    // 요청 바디: CouponCartItemRequest (cartItemId, userCouponId)
     const body = {
       cartItemId: parseInt(currentCartItemId),
       userCouponId: userCouponId ? parseInt(userCouponId) : null
